@@ -1,6 +1,7 @@
 import { Trophy } from 'lucide-react';
 import { data } from '@/lib/data';
 import NewsCard from '@/components/NewsCard';
+import FollowLeagueButton from '@/components/FollowLeagueButton';
 import { Category } from '@/types';
 
 const CATEGORY_MAP: Record<string, Category> = {
@@ -27,10 +28,11 @@ export default async function CountryPage({ params }: { params: Promise<{ slug: 
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-8 border-b border-slate-800 pb-4">
+      <div className="flex items-center justify-between mb-8 border-b border-[var(--border-subtle)] pb-4">
         <div>
           <span className="text-primary text-sm font-bold tracking-widest uppercase mb-1 block">تغطية خاصة</span>
-          <h1 className="text-3xl md:text-5xl font-black text-white">{currentCategory}</h1>
+          <h1 className="text-3xl md:text-5xl font-black text-[var(--fg)] mb-3">{currentCategory}</h1>
+          <FollowLeagueButton league={currentCategory} />
         </div>
         <div className="hidden md:block">
           <Trophy size={48} className="text-slate-800" />
@@ -38,8 +40,8 @@ export default async function CountryPage({ params }: { params: Promise<{ slug: 
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-20 bg-slate-900 rounded-xl border border-slate-800 border-dashed">
-          <p className="text-slate-500">لا توجد أخبار حالياً في هذا القسم.</p>
+        <div className="text-center py-20 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)] border-dashed">
+          <p className="text-[var(--fg-faint)]">لا توجد أخبار حالياً في هذا القسم.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

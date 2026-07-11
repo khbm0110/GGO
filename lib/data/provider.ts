@@ -1,4 +1,5 @@
-import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, Player } from '@/types';
+import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, Player, MatchDetails } from '@/types';
+import type { Prediction, LeaderboardEntry, Poll } from '@/types/community';
 
 // This is the single "contract" the whole app talks to for data.
 // Right now `mock-provider.ts` implements it using local seed data
@@ -17,6 +18,7 @@ export interface DataProvider {
 
   getMatches(): Promise<Match[]>;
   getMatchById(id: string): Promise<Match | null>;
+  getMatchDetails(matchId: string): Promise<MatchDetails | null>;
 
   getStandings(league?: string): Promise<Standing[]>;
 
@@ -46,4 +48,15 @@ export interface DataProvider {
 
   getFeatureFlags(): Promise<FeatureFlags>;
   setFeatureFlag(key: keyof FeatureFlags, value: boolean): Promise<void>;
+
+  // Community: match-result predictions + points leaderboard
+  submitPrediction(prediction: Prediction): Promise<void>;
+  getPredictionForUserMatch(matchId: string, userId: string): Promise<Prediction | null>;
+  getPredictionsForMatch(matchId: string): Promise<Prediction[]>;
+  getLeaderboard(): Promise<LeaderboardEntry[]>;
+
+  // Community: opinion polls
+  getActivePoll(): Promise<Poll | null>;
+  votePoll(pollId: string, optionId: string, userId: string): Promise<Poll>;
+  hasUserVotedPoll(pollId: string, userId: string): Promise<boolean>;
 }

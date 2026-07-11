@@ -63,7 +63,7 @@ export default function AdminDashboardPage() {
   }, []);
 
   if (loading || !isAdmin) {
-    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500">جارٍ التحقق من الصلاحيات...</div>;
+    return <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center text-[var(--fg-faint)]">جارٍ التحقق من الصلاحيات...</div>;
   }
 
   async function handleSaveArticle(articleData: Article) {
@@ -165,11 +165,11 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col lg:flex-row">
-      <aside className="lg:w-64 bg-slate-900 border-b lg:border-b-0 lg:border-l border-slate-800 p-4 flex-shrink-0">
+    <div className="min-h-screen bg-[var(--bg-base)] flex flex-col lg:flex-row">
+      <aside className="lg:w-64 bg-[var(--bg-surface)] border-b lg:border-b-0 lg:border-l border-[var(--border-subtle)] p-4 flex-shrink-0">
         <div className="flex items-center gap-2 mb-6 px-2">
           <Shield className="text-red-500" size={24} />
-          <span className="font-black text-white text-lg">لوحة التحكم</span>
+          <span className="font-black text-[var(--fg)] text-lg">لوحة التحكم</span>
         </div>
         <nav className="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar">
           {NAV_ITEMS.map((item) => (
@@ -177,7 +177,7 @@ export default function AdminDashboardPage() {
               key={item.key}
               onClick={() => setActiveTab(item.key)}
               className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${
-                activeTab === item.key ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                activeTab === item.key ? 'bg-primary/10 text-primary' : 'text-[var(--fg-subtle)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--fg)]'
               }`}
             >
               <item.icon size={16} /> {item.label}
@@ -189,7 +189,7 @@ export default function AdminDashboardPage() {
       <main className="flex-1 p-4 md:p-8">
         {activeTab === 'OVERVIEW' && (
           <div>
-            <h1 className="text-2xl font-black text-white mb-6">نظرة عامة</h1>
+            <h1 className="text-2xl font-black text-[var(--fg)] mb-6">نظرة عامة</h1>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <StatCard label="المقالات" value={articles.length} icon={FileText} />
               <StatCard label="المستخدمون" value={users.length} icon={Users} />
@@ -202,21 +202,21 @@ export default function AdminDashboardPage() {
         {activeTab === 'ARTICLES' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-black text-white">المقالات ({articles.length})</h1>
+              <h1 className="text-2xl font-black text-[var(--fg)]">المقالات ({articles.length})</h1>
               <button
                 onClick={() => {
                   setEditorMode('NEW');
                   setEditingArticle({ id: 'new-article', title: '', summary: '', content: '', category: Category.SAUDI, imageUrl: '' });
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-emerald-600 text-white rounded-lg font-bold text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-emerald-600 text-[var(--fg)] rounded-lg font-bold text-sm"
               >
                 <Plus size={16} /> مقال جديد
               </button>
             </div>
 
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-slate-800 text-slate-400 text-xs">
+                <thead className="bg-[var(--bg-surface-2)] text-[var(--fg-subtle)] text-xs">
                   <tr>
                     <th className="p-3 text-right">العنوان</th>
                     <th className="p-3 text-right">التصنيف</th>
@@ -224,12 +224,12 @@ export default function AdminDashboardPage() {
                     <th className="p-3 text-center">إجراءات</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {articles.map((article) => (
-                    <tr key={article.id} className="hover:bg-slate-800/30">
-                      <td className="p-3 text-white font-bold max-w-xs truncate">{article.title}</td>
-                      <td className="p-3 text-slate-400">{article.category}</td>
-                      <td className="p-3 text-center text-slate-400">{article.views.toLocaleString()}</td>
+                    <tr key={article.id} className="hover:bg-[color-mix(in_srgb,var(--bg-surface-2)_30%,transparent)]">
+                      <td className="p-3 text-[var(--fg)] font-bold max-w-xs truncate">{article.title}</td>
+                      <td className="p-3 text-[var(--fg-subtle)]">{article.category}</td>
+                      <td className="p-3 text-center text-[var(--fg-subtle)]">{article.views.toLocaleString()}</td>
                       <td className="p-3">
                         <div className="flex items-center justify-center gap-2">
                           <button
@@ -237,11 +237,11 @@ export default function AdminDashboardPage() {
                               setEditorMode('EDIT');
                               setEditingArticle(article);
                             }}
-                            className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300"
+                            className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-3)] rounded text-[var(--fg-muted)]"
                           >
                             <Edit size={14} />
                           </button>
-                          <button onClick={() => handleDeleteArticle(article.id)} className="p-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-500 rounded text-slate-300">
+                          <button onClick={() => handleDeleteArticle(article.id)} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-red-500/20 hover:text-red-500 rounded text-[var(--fg-muted)]">
                             <Trash2 size={14} />
                           </button>
                         </div>
@@ -256,10 +256,10 @@ export default function AdminDashboardPage() {
 
         {activeTab === 'USERS' && (
           <div>
-            <h1 className="text-2xl font-black text-white mb-6">المستخدمون ({users.length})</h1>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+            <h1 className="text-2xl font-black text-[var(--fg)] mb-6">المستخدمون ({users.length})</h1>
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-slate-800 text-slate-400 text-xs">
+                <thead className="bg-[var(--bg-surface-2)] text-[var(--fg-subtle)] text-xs">
                   <tr>
                     <th className="p-3 text-right">المستخدم</th>
                     <th className="p-3 text-right">البريد</th>
@@ -267,11 +267,11 @@ export default function AdminDashboardPage() {
                     <th className="p-3 text-center">إجراءات</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-slate-800/30">
-                      <td className="p-3 text-white font-bold">{user.name} <span className="text-slate-500 font-normal">@{user.username}</span></td>
-                      <td className="p-3 text-slate-400">{user.email}</td>
+                    <tr key={user.id} className="hover:bg-[color-mix(in_srgb,var(--bg-surface-2)_30%,transparent)]">
+                      <td className="p-3 text-[var(--fg)] font-bold">{user.name} <span className="text-[var(--fg-faint)] font-normal">@{user.username}</span></td>
+                      <td className="p-3 text-[var(--fg-subtle)]">{user.email}</td>
                       <td className="p-3 text-center">
                         <span className={`text-xs px-2 py-1 rounded-full font-bold ${user.status === 'banned' ? 'bg-red-500/10 text-red-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
                           {user.status === 'banned' ? 'محظور' : 'نشط'}
@@ -279,10 +279,10 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="p-3">
                         <div className="flex items-center justify-center gap-2">
-                          <button onClick={() => handleToggleUserStatus(user)} className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300" title={user.status === 'banned' ? 'إلغاء الحظر' : 'حظر'}>
+                          <button onClick={() => handleToggleUserStatus(user)} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-3)] rounded text-[var(--fg-muted)]" title={user.status === 'banned' ? 'إلغاء الحظر' : 'حظر'}>
                             {user.status === 'banned' ? <Check size={14} /> : <Ban size={14} />}
                           </button>
-                          <button onClick={() => handleDeleteUser(user.id, user.name)} className="p-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-500 rounded text-slate-300">
+                          <button onClick={() => handleDeleteUser(user.id, user.name)} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-red-500/20 hover:text-red-500 rounded text-[var(--fg-muted)]">
                             <Trash2 size={14} />
                           </button>
                         </div>
@@ -297,28 +297,28 @@ export default function AdminDashboardPage() {
 
         {activeTab === 'MODERATION' && (
           <div>
-            <h1 className="text-2xl font-black text-white mb-6">مراقبة التعليقات ({comments.length})</h1>
+            <h1 className="text-2xl font-black text-[var(--fg)] mb-6">مراقبة التعليقات ({comments.length})</h1>
             {comments.length === 0 ? (
-              <div className="text-center py-20 bg-slate-900 rounded-xl border border-slate-800 border-dashed text-slate-500">لا توجد تعليقات بعد.</div>
+              <div className="text-center py-20 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)] border-dashed text-[var(--fg-faint)]">لا توجد تعليقات بعد.</div>
             ) : (
               <div className="space-y-3">
                 {comments.map((c) => (
-                  <div key={c.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between gap-4">
+                  <div key={c.id} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-4 flex items-center justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-white">{c.user}</p>
-                      <p className="text-sm text-slate-400 truncate">{c.text}</p>
+                      <p className="text-sm font-bold text-[var(--fg)]">{c.user}</p>
+                      <p className="text-sm text-[var(--fg-subtle)] truncate">{c.text}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <span className={`text-xs px-2 py-1 rounded-full font-bold ${c.status === 'reported' ? 'bg-amber-500/10 text-amber-400' : c.status === 'hidden' ? 'bg-red-500/10 text-red-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
                         {c.status === 'reported' ? 'مُبلَّغ عنه' : c.status === 'hidden' ? 'مخفي' : 'ظاهر'}
                       </span>
                       {c.status !== 'hidden' && (
-                        <button onClick={() => handleModerate(c.id, 'hidden')} className="p-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-500 rounded text-slate-300">
+                        <button onClick={() => handleModerate(c.id, 'hidden')} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-red-500/20 hover:text-red-500 rounded text-[var(--fg-muted)]">
                           <Trash2 size={14} />
                         </button>
                       )}
                       {c.status !== 'visible' && (
-                        <button onClick={() => handleModerate(c.id, 'visible')} className="p-1.5 bg-slate-800 hover:bg-emerald-500/20 hover:text-emerald-500 rounded text-slate-300">
+                        <button onClick={() => handleModerate(c.id, 'visible')} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-emerald-500/20 hover:text-emerald-500 rounded text-[var(--fg-muted)]">
                           <Check size={14} />
                         </button>
                       )}
@@ -333,7 +333,7 @@ export default function AdminDashboardPage() {
         {activeTab === 'CLUBS' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-black text-white">الأندية ({clubs.length})</h1>
+              <h1 className="text-2xl font-black text-[var(--fg)]">الأندية ({clubs.length})</h1>
               <button
                 onClick={() =>
                   setEditingClub({
@@ -355,7 +355,7 @@ export default function AdminDashboardPage() {
                     country: Category.SAUDI,
                   })
                 }
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-emerald-600 text-white rounded-lg font-bold text-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-emerald-600 text-[var(--fg)] rounded-lg font-bold text-sm"
               >
                 <Plus size={16} /> نادٍ جديد
               </button>
@@ -363,16 +363,16 @@ export default function AdminDashboardPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {clubs.map((club) => (
-                <div key={club.id} className="bg-slate-900 border border-slate-800 rounded-xl p-4 flex items-center justify-between gap-3">
+                <div key={club.id} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-4 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-bold text-white truncate">{club.name}</p>
-                    <p className="text-xs text-slate-500">{club.country}</p>
+                    <p className="font-bold text-[var(--fg)] truncate">{club.name}</p>
+                    <p className="text-xs text-[var(--fg-faint)]">{club.country}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <button onClick={() => setEditingClub(club)} className="p-1.5 bg-slate-800 hover:bg-slate-700 rounded text-slate-300">
+                    <button onClick={() => setEditingClub(club)} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-3)] rounded text-[var(--fg-muted)]">
                       <Edit size={14} />
                     </button>
-                    <button onClick={() => handleDeleteClub(club.id)} className="p-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-500 rounded text-slate-300">
+                    <button onClick={() => handleDeleteClub(club.id)} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-red-500/20 hover:text-red-500 rounded text-[var(--fg-muted)]">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -385,34 +385,34 @@ export default function AdminDashboardPage() {
         {activeTab === 'SPONSORS' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-black text-white">الرعاة والإعلانات ({sponsors.length})</h1>
-              <button onClick={handleAddSponsor} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-emerald-600 text-white rounded-lg font-bold text-sm">
+              <h1 className="text-2xl font-black text-[var(--fg)]">الرعاة والإعلانات ({sponsors.length})</h1>
+              <button onClick={handleAddSponsor} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-emerald-600 text-[var(--fg)] rounded-lg font-bold text-sm">
                 <Plus size={16} /> راعٍ جديد
               </button>
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-slate-800 text-slate-400 text-xs">
+                <thead className="bg-[var(--bg-surface-2)] text-[var(--fg-subtle)] text-xs">
                   <tr>
                     <th className="p-3 text-right">الاسم</th>
                     <th className="p-3 text-center">الحالة</th>
                     <th className="p-3 text-center">إجراءات</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-[var(--border-subtle)]">
                   {sponsors.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-800/30">
-                      <td className="p-3 text-white font-bold">{s.name}</td>
+                    <tr key={s.id} className="hover:bg-[color-mix(in_srgb,var(--bg-surface-2)_30%,transparent)]">
+                      <td className="p-3 text-[var(--fg)] font-bold">{s.name}</td>
                       <td className="p-3 text-center">
                         <button
                           onClick={() => handleToggleSponsor(s)}
-                          className={`text-xs px-2 py-1 rounded-full font-bold ${s.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-500'}`}
+                          className={`text-xs px-2 py-1 rounded-full font-bold ${s.active ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[var(--bg-surface-2)] text-[var(--fg-faint)]'}`}
                         >
                           {s.active ? 'مفعّل' : 'موقوف'}
                         </button>
                       </td>
                       <td className="p-3 text-center">
-                        <button onClick={() => handleDeleteSponsor(s.id)} className="p-1.5 bg-slate-800 hover:bg-red-500/20 hover:text-red-500 rounded text-slate-300 mx-auto">
+                        <button onClick={() => handleDeleteSponsor(s.id)} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-red-500/20 hover:text-red-500 rounded text-[var(--fg-muted)] mx-auto">
                           <Trash2 size={14} />
                         </button>
                       </td>
@@ -421,7 +421,7 @@ export default function AdminDashboardPage() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-6 bg-slate-900/50 border border-dashed border-slate-800 rounded-xl p-4 text-center text-slate-500 text-sm">
+            <div className="mt-6 bg-[color-mix(in_srgb,var(--bg-surface)_50%,transparent)] border border-dashed border-[var(--border-subtle)] rounded-xl p-4 text-center text-[var(--fg-faint)] text-sm">
               ⚠️ ربط Google AdSense الحقيقي (رموز الإعلانات المباشرة) يحتاج حساب AdSense معتمد — سيُضاف لاحقًا.
             </div>
           </div>
@@ -429,42 +429,42 @@ export default function AdminDashboardPage() {
 
         {activeTab === 'SEO' && seoSettings && (
           <div className="max-w-2xl">
-            <h1 className="text-2xl font-black text-white mb-6">إعدادات SEO</h1>
-            <form onSubmit={handleSaveSeo} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4">
+            <h1 className="text-2xl font-black text-[var(--fg)] mb-6">إعدادات SEO</h1>
+            <form onSubmit={handleSaveSeo} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 space-y-4">
               <div>
-                <label className="block text-sm text-slate-400 mb-1">عنوان الموقع</label>
+                <label className="block text-sm text-[var(--fg-subtle)] mb-1">عنوان الموقع</label>
                 <input
                   value={seoSettings.siteTitle}
                   onChange={(e) => setSeoSettings({ ...seoSettings, siteTitle: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--fg)]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">الوصف التعريفي (Meta Description)</label>
+                <label className="block text-sm text-[var(--fg-subtle)] mb-1">الوصف التعريفي (Meta Description)</label>
                 <textarea
                   value={seoSettings.metaDescription}
                   onChange={(e) => setSeoSettings({ ...seoSettings, metaDescription: e.target.value })}
                   rows={3}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--fg)]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">الكلمات المفتاحية</label>
+                <label className="block text-sm text-[var(--fg-subtle)] mb-1">الكلمات المفتاحية</label>
                 <input
                   value={seoSettings.metaKeywords}
                   onChange={(e) => setSeoSettings({ ...seoSettings, metaKeywords: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--fg)]"
                 />
               </div>
               <div>
-                <label className="block text-sm text-slate-400 mb-1">رابط صورة المشاركة (OG Image)</label>
+                <label className="block text-sm text-[var(--fg-subtle)] mb-1">رابط صورة المشاركة (OG Image)</label>
                 <input
                   value={seoSettings.ogImageUrl}
                   onChange={(e) => setSeoSettings({ ...seoSettings, ogImageUrl: e.target.value })}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--fg)]"
                 />
               </div>
-              <button type="submit" className="px-4 py-2 bg-primary hover:bg-emerald-600 text-white rounded-lg font-bold flex items-center gap-2">
+              <button type="submit" className="px-4 py-2 bg-primary hover:bg-emerald-600 text-[var(--fg)] rounded-lg font-bold flex items-center gap-2">
                 <Save size={16} /> حفظ الإعدادات
               </button>
             </form>
@@ -473,14 +473,14 @@ export default function AdminDashboardPage() {
 
         {activeTab === 'SETTINGS' && featureFlags && (
           <div className="max-w-xl">
-            <h1 className="text-2xl font-black text-white mb-6">تفعيل/تعطيل ميزات الموقع</h1>
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl divide-y divide-slate-800">
+            <h1 className="text-2xl font-black text-[var(--fg)] mb-6">تفعيل/تعطيل ميزات الموقع</h1>
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl divide-y divide-[var(--border-subtle)]">
               {(Object.keys(featureFlags) as (keyof FeatureFlags)[]).map((key) => (
                 <div key={key} className="flex items-center justify-between p-4">
-                  <span className="text-slate-300 font-bold">{key}</span>
+                  <span className="text-[var(--fg-muted)] font-bold">{key}</span>
                   <button
                     onClick={() => handleToggleFlag(key)}
-                    className={`w-12 h-6 rounded-full transition-colors relative ${featureFlags[key] ? 'bg-primary' : 'bg-slate-700'}`}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${featureFlags[key] ? 'bg-primary' : 'bg-[var(--bg-surface-3)]'}`}
                   >
                     <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform ${featureFlags[key] ? 'right-0.5' : 'right-6'}`} />
                   </button>
@@ -491,15 +491,15 @@ export default function AdminDashboardPage() {
         )}
 
         {COMING_SOON_TABS.some((t) => t.key === activeTab) && (
-          <div className="flex flex-col items-center justify-center py-24 text-center bg-slate-900/50 rounded-2xl border border-slate-800 border-dashed">
+          <div className="flex flex-col items-center justify-center py-24 text-center bg-[color-mix(in_srgb,var(--bg-surface)_50%,transparent)] rounded-2xl border border-[var(--border-subtle)] border-dashed">
             {(() => {
               const tab = COMING_SOON_TABS.find((t) => t.key === activeTab)!;
               const Icon = tab.icon;
               return (
                 <>
                   <Icon size={40} className="text-slate-700 mb-4" />
-                  <h3 className="text-xl font-bold text-slate-300 mb-2">{tab.label} — قريبًا</h3>
-                  <p className="text-slate-500 text-sm max-w-sm">{tab.note}</p>
+                  <h3 className="text-xl font-bold text-[var(--fg-muted)] mb-2">{tab.label} — قريبًا</h3>
+                  <p className="text-[var(--fg-faint)] text-sm max-w-sm">{tab.note}</p>
                 </>
               );
             })()}
@@ -523,10 +523,10 @@ export default function AdminDashboardPage() {
 
 function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: typeof FileText }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-4">
       <Icon size={18} className="text-primary mb-2" />
-      <div className="text-2xl font-black text-white">{value}</div>
-      <div className="text-xs text-slate-500 font-bold">{label}</div>
+      <div className="text-2xl font-black text-[var(--fg)]">{value}</div>
+      <div className="text-xs text-[var(--fg-faint)] font-bold">{label}</div>
     </div>
   );
 }

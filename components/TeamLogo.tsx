@@ -14,7 +14,7 @@ export default function TeamLogo({ src, alt, className = 'w-6 h-6' }: TeamLogoPr
 
   if (error || !src) {
     return (
-      <div className={`${className} bg-slate-800 rounded-full flex items-center justify-center text-slate-600 border border-slate-700`}>
+      <div className={`${className} bg-[var(--bg-surface-2)] rounded-full flex items-center justify-center text-[var(--fg-faint)] border border-[var(--border)]`}>
         <Shield size="60%" />
       </div>
     );

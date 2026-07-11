@@ -18,15 +18,15 @@ export default function PlayerDetailPage() {
   }, [params?.clubId, params?.playerId]);
 
   if (result === undefined) {
-    return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-500">جارٍ التحميل...</div>;
+    return <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center text-[var(--fg-faint)]">جارٍ التحميل...</div>;
   }
 
   if (!result) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-        <div className="text-center p-8 bg-slate-900 rounded-xl border border-slate-800">
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center text-[var(--fg)]">
+        <div className="text-center p-8 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)]">
           <h2 className="text-2xl font-bold mb-2">عذراً</h2>
-          <p className="text-slate-400">بيانات هذا اللاعب غير متوفرة حالياً.</p>
+          <p className="text-[var(--fg-subtle)]">بيانات هذا اللاعب غير متوفرة حالياً.</p>
           <Link href="/clubs" className="text-primary mt-4 inline-block font-bold hover:underline">العودة للأندية</Link>
         </div>
       </div>
@@ -38,7 +38,7 @@ export default function PlayerDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <Link href={`/club/${club.id}`} className="flex items-center gap-1 text-slate-400 hover:text-white text-sm mb-6 w-fit">
+      <Link href={`/club/${club.id}`} className="flex items-center gap-1 text-[var(--fg-subtle)] hover:text-[var(--fg)] text-sm mb-6 w-fit">
         <ArrowRight size={16} /> العودة لصفحة {club.name}
       </Link>
 
@@ -49,7 +49,7 @@ export default function PlayerDetailPage() {
             style={{ borderColor: primaryColor, background: `linear-gradient(160deg, ${primaryColor}33, #0f172a 60%)` }}
           >
             <div className="absolute top-6 right-5 flex flex-col items-center gap-1 z-20">
-              <span className="text-4xl font-black leading-none text-white">{player.rating}</span>
+              <span className="text-4xl font-black leading-none text-[var(--fg)]">{player.rating}</span>
               <span className="text-xs font-bold uppercase tracking-wider text-white/80">{player.position}</span>
               <div className="w-8 h-8 mt-2">
                 <TeamLogo src={club.logo} alt={club.name} className="w-8 h-8" />
@@ -64,28 +64,28 @@ export default function PlayerDetailPage() {
               )}
             </div>
           </div>
-          <h1 className="text-2xl font-black text-white mt-4 text-center">{player.name}</h1>
-          <p className="text-slate-400 text-sm">#{player.number} • {club.name}</p>
+          <h1 className="text-2xl font-black text-[var(--fg)] mt-4 text-center">{player.name}</h1>
+          <p className="text-[var(--fg-subtle)] text-sm">#{player.number} • {club.name}</p>
         </div>
 
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-            <h3 className="font-bold text-white mb-4 text-lg border-b border-slate-800 pb-2 flex items-center gap-2">
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6">
+            <h3 className="font-bold text-[var(--fg)] mb-4 text-lg border-b border-[var(--border-subtle)] pb-2 flex items-center gap-2">
               <TrendingUp size={18} className="text-primary" /> الإحصائيات الفنية
             </h3>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
               {(['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const).map((key) => (
                 <div key={key} className="text-center">
-                  <span className="block text-2xl font-black text-white">{player.stats?.[key] ?? '-'}</span>
-                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{key}</span>
+                  <span className="block text-2xl font-black text-[var(--fg)]">{player.stats?.[key] ?? '-'}</span>
+                  <span className="text-[10px] text-[var(--fg-faint)] font-bold uppercase tracking-widest">{key}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {player.seasonStats && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
-              <h3 className="font-bold text-white mb-4 text-lg border-b border-slate-800 pb-2">أداء الموسم الحالي</h3>
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6">
+              <h3 className="font-bold text-[var(--fg)] mb-4 text-lg border-b border-[var(--border-subtle)] pb-2">أداء الموسم الحالي</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <Stat label="المباريات" value={player.seasonStats.matches} />
                 <Stat label="الأهداف" value={player.seasonStats.goals} />
@@ -96,8 +96,8 @@ export default function PlayerDetailPage() {
           )}
 
           {player.marketValue !== undefined && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex items-center justify-between">
-              <span className="text-slate-400 font-bold">القيمة السوقية التقديرية</span>
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 flex items-center justify-between">
+              <span className="text-[var(--fg-subtle)] font-bold">القيمة السوقية التقديرية</span>
               <span className="text-2xl font-black text-emerald-400">€{player.marketValue.toLocaleString()}</span>
             </div>
           )}
@@ -115,16 +115,16 @@ export default function PlayerDetailPage() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-slate-950 rounded-xl border border-slate-800 p-3 text-center">
-      <span className="block text-xl font-black text-white">{value}</span>
-      <span className="text-[10px] text-slate-500 font-bold">{label}</span>
+    <div className="bg-[var(--bg-base)] rounded-xl border border-[var(--border-subtle)] p-3 text-center">
+      <span className="block text-xl font-black text-[var(--fg)]">{value}</span>
+      <span className="text-[10px] text-[var(--fg-faint)] font-bold">{label}</span>
     </div>
   );
 }
 
 function ComingSoonCard({ icon: Icon, label }: { icon: typeof Repeat; label: string }) {
   return (
-    <div className="bg-slate-900/50 border border-dashed border-slate-800 rounded-xl p-4 text-center text-slate-500">
+    <div className="bg-[color-mix(in_srgb,var(--bg-surface)_50%,transparent)] border border-dashed border-[var(--border-subtle)] rounded-xl p-4 text-center text-[var(--fg-faint)]">
       <Icon size={20} className="mx-auto mb-2" />
       <span className="text-xs font-bold">{label}</span>
       <p className="text-[10px] mt-1">قريبًا</p>

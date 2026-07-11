@@ -36,11 +36,11 @@ export default function ClubEditor({ initialData, onSave, onCancel }: ClubEditor
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-10 px-4 pb-10 overflow-y-auto">
-      <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm" onClick={onCancel} />
-      <form onSubmit={handleSubmit} className="relative w-full max-w-2xl bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl">
-        <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">بيانات النادي</h2>
-          <button type="button" onClick={onCancel} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white">
+      <div className="absolute inset-0 bg-[color-mix(in_srgb,var(--bg-base)_90%,transparent)] backdrop-blur-sm" onClick={onCancel} />
+      <form onSubmit={handleSubmit} className="relative w-full max-w-2xl bg-[var(--bg-surface)] border border-[var(--border)] rounded-2xl shadow-2xl">
+        <div className="p-4 border-b border-[var(--border)] flex items-center justify-between">
+          <h2 className="text-lg font-bold text-[var(--fg)]">بيانات النادي</h2>
+          <button type="button" onClick={onCancel} className="p-2 hover:bg-[var(--bg-surface-2)] rounded-full text-[var(--fg-subtle)] hover:text-[var(--fg)]">
             <X size={20} />
           </button>
         </div>
@@ -62,8 +62,8 @@ export default function ClubEditor({ initialData, onSave, onCancel }: ClubEditor
           <div className="grid grid-cols-2 gap-4">
             <Field label="اللقب" name="nickname" value={club.nickname} onChange={handleChange} />
             <div>
-              <label className="block text-sm text-slate-400 mb-1">الدوري/الدولة</label>
-              <select name="country" value={club.country} onChange={handleChange} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white">
+              <label className="block text-sm text-[var(--fg-subtle)] mb-1">الدوري/الدولة</label>
+              <select name="country" value={club.country} onChange={handleChange} className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--fg)]">
                 {Object.values(Category).map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
@@ -76,14 +76,14 @@ export default function ClubEditor({ initialData, onSave, onCancel }: ClubEditor
             <Field label="عدد المشجعين" name="fanCount" value={String(club.fanCount || 0)} onChange={handleChange} type="number" />
           </div>
 
-          <p className="text-[11px] text-amber-500/80 border-t border-slate-800 pt-3">
+          <p className="text-[11px] text-amber-500/80 border-t border-[var(--border-subtle)] pt-3">
             ⚠️ تعديل قائمة اللاعبين والتشكيلة والبطولات سيُضاف في نسخة قادمة من محرر النادي.
           </p>
         </div>
 
-        <div className="p-4 border-t border-slate-700 flex justify-end gap-3">
-          <button type="button" onClick={onCancel} className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg font-bold">إلغاء</button>
-          <button type="submit" disabled={saving} className="px-4 py-2 bg-primary hover:bg-emerald-600 text-white rounded-lg font-bold flex items-center gap-2 disabled:opacity-50">
+        <div className="p-4 border-t border-[var(--border)] flex justify-end gap-3">
+          <button type="button" onClick={onCancel} className="px-4 py-2 bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-3)] text-[var(--fg-muted)] rounded-lg font-bold">إلغاء</button>
+          <button type="submit" disabled={saving} className="px-4 py-2 bg-primary hover:bg-emerald-600 text-[var(--fg)] rounded-lg font-bold flex items-center gap-2 disabled:opacity-50">
             <Save size={16} /> {saving ? 'جارٍ الحفظ...' : 'حفظ'}
           </button>
         </div>
@@ -107,8 +107,8 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm text-slate-400 mb-1">{label}</label>
-      <input name={name} value={value} onChange={onChange} type={type} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white" />
+      <label className="block text-sm text-[var(--fg-subtle)] mb-1">{label}</label>
+      <input name={name} value={value} onChange={onChange} type={type} className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--fg)]" />
     </div>
   );
 }

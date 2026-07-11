@@ -4,12 +4,13 @@ import { data } from '@/lib/data';
 import NewsCard from '@/components/NewsCard';
 import MatchTicker from '@/components/MatchTicker';
 import StandingsWidget from '@/components/StandingsWidget';
+import PollWidget from '@/components/PollWidget';
 import { Category } from '@/types';
 
 function SectionHeader({ title, link }: { title: string; link?: string }) {
   return (
     <div className="flex items-center justify-between mb-4 border-r-4 border-primary pr-3 bg-gradient-to-l from-slate-900 to-transparent p-2 rounded-r">
-      <h2 className="text-xl font-black text-white">{title}</h2>
+      <h2 className="text-xl font-black text-[var(--fg)]">{title}</h2>
       {link && (
         <Link href={link} className="text-xs text-primary hover:text-emerald-400 flex items-center transition-colors font-bold">
           المزيد <ChevronLeft size={14} />
@@ -43,7 +44,7 @@ export default async function HomePage() {
             {featuredArticle ? (
               <NewsCard article={featuredArticle} featured />
             ) : (
-              <div className="h-full w-full bg-slate-900 rounded-xl flex items-center justify-center text-slate-500">
+              <div className="h-full w-full bg-[var(--bg-surface)] rounded-xl flex items-center justify-center text-[var(--fg-faint)]">
                 لا توجد مقالات لعرضها.
               </div>
             )}
@@ -70,6 +71,7 @@ export default async function HomePage() {
 
         <div className="lg:col-span-3 space-y-6">
           <StandingsWidget standings={standings} />
+          <PollWidget />
         </div>
       </div>
     </div>

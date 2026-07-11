@@ -42,7 +42,7 @@ export default function ArticleComments({ articleId }: { articleId: string }) {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg font-bold text-sm transition-colors"
+        className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-3)] text-[var(--fg-muted)] hover:text-[var(--fg)] rounded-lg font-bold text-sm transition-colors"
       >
         <MessageSquare size={16} />
         التعليقات ({comments.length})

@@ -1,4 +1,5 @@
-import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags } from '@/types';
+import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, MatchDetails } from '@/types';
+import type { Prediction, LeaderboardEntry, Poll } from '@/types/community';
 import type { DataProvider } from './provider';
 import {
   INITIAL_ARTICLES,
@@ -21,6 +22,25 @@ const clubs: Record<string, ClubProfile> = { ...(CLUB_DATABASE as Record<string,
 const sponsors: Sponsor[] = [...MOCK_SPONSORS];
 let seoSettings: SeoSettings = { ...DEFAULT_SEO_SETTINGS };
 let featureFlags: FeatureFlags = { ...DEFAULT_FEATURE_FLAGS };
+const predictions: Prediction[] = [];
+let activePoll: Poll = {
+  id: 'poll-1',
+  question: 'من هو أفضل لاعب في الدوري السعودي هذا الموسم؟',
+  options: [
+    { id: 'opt-1', label: 'كريستيانو رونالدو', votes: 0 },
+    { id: 'opt-2', label: 'نيمار جونيور', votes: 0 },
+    { id: 'opt-3', label: 'سالم الدوسري', votes: 0 },
+  ],
+};
+const pollVoters = new Set<string>(); // "pollId:userId"
+
+function calculatePoints(prediction: Prediction, match: Match): number {
+  if (match.scoreHome === null || match.scoreAway === null || match.scoreHome === undefined || match.scoreAway === undefined) return 0;
+  if (prediction.predictedHome === match.scoreHome && prediction.predictedAway === match.scoreAway) return 3;
+  const actualResult = Math.sign(match.scoreHome - match.scoreAway);
+  const predictedResult = Math.sign(prediction.predictedHome - prediction.predictedAway);
+  return actualResult === predictedResult ? 1 : 0;
+}
 
 function delay<T>(value: T, ms = 80): Promise<T> {
   return new Promise((resolve) => setTimeout(() => resolve(value), ms));
@@ -59,6 +79,32 @@ export const mockProvider: DataProvider = {
   },
   async getMatchById(id) {
     return delay((MOCK_MATCHES as Match[]).find((m) => m.id === id) ?? null);
+  },
+  async getMatchDetails(matchId) {
+    // Ported from the original apiFootball.ts mock service — generic
+    // placeholder stats until a real fixture-data provider is connected.
+    const details: MatchDetails = {
+      stats: {
+        possession: 55,
+        shotsHome: 12,
+        shotsAway: 8,
+        shotsOnTargetHome: 5,
+        shotsOnTargetAway: 3,
+        cornersHome: 6,
+        cornersAway: 4,
+      },
+      lineups: {
+        home: ['الحارس', 'مدافع أيمن', 'مدافع أيسر', 'قلب دفاع 1', 'قلب دفاع 2', 'وسط 1', 'وسط 2', 'وسط 3', 'مهاجم 1', 'مهاجم 2', 'مهاجم 3'],
+        away: ['الحارس', 'مدافع أيمن', 'مدافع أيسر', 'قلب دفاع 1', 'قلب دفاع 2', 'وسط 1', 'وسط 2', 'وسط 3', 'مهاجم 1', 'مهاجم 2', 'مهاجم 3'],
+      },
+      events: [
+        { time: "12'", team: 'HOME', type: 'GOAL', player: 'المهاجم الهداف' },
+        { time: "34'", team: 'AWAY', type: 'YELLOW', player: 'لاعب الوسط' },
+        { time: "67'", team: 'HOME', type: 'SUB', player: 'لاعب بديل' },
+      ],
+      summary: 'ملخص المباراة سيتم تحديثه تلقائيًا بعد ربط مزود بيانات مباريات حي.',
+    };
+    return delay(details, 200);
   },
 
   async getStandings(league) {
@@ -151,5 +197,59 @@ export const mockProvider: DataProvider = {
   async setFeatureFlag(key, value) {
     featureFlags = { ...featureFlags, [key]: value };
     return delay(undefined);
+  },
+
+  async submitPrediction(prediction) {
+    const idx = predictions.findIndex((p) => p.matchId === prediction.matchId && p.userId === prediction.userId);
+    if (idx > -1) predictions[idx] = prediction;
+    else predictions.push(prediction);
+    return delay(undefined);
+  },
+  async getPredictionForUserMatch(matchId, userId) {
+    return delay(predictions.find((p) => p.matchId === matchId && p.userId === userId) ?? null);
+  },
+  async getPredictionsForMatch(matchId) {
+    return delay(predictions.filter((p) => p.matchId === matchId));
+  },
+  async getLeaderboard() {
+    const matches = MOCK_MATCHES as Match[];
+    const byUser = new Map<string, LeaderboardEntry>();
+
+    for (const prediction of predictions) {
+      const match = matches.find((m) => m.id === prediction.matchId);
+      if (!match) continue;
+      const points = match.status === 'FINISHED' ? calculatePoints(prediction, match) : 0;
+
+      const user = users.find((u) => u.id === prediction.userId);
+      const existing = byUser.get(prediction.userId) || {
+        userId: prediction.userId,
+        username: prediction.username,
+        name: user?.name || prediction.username,
+        avatar: user?.avatar,
+        totalPoints: 0,
+        predictionsCount: 0,
+      };
+      existing.totalPoints += points;
+      existing.predictionsCount += 1;
+      byUser.set(prediction.userId, existing);
+    }
+
+    return delay(Array.from(byUser.values()).sort((a, b) => b.totalPoints - a.totalPoints));
+  },
+
+  async getActivePoll() {
+    return delay({ ...activePoll, options: activePoll.options.map((o) => ({ ...o })) });
+  },
+  async votePoll(pollId, optionId, userId) {
+    const key = `${pollId}:${userId}`;
+    if (!pollVoters.has(key)) {
+      const option = activePoll.options.find((o) => o.id === optionId);
+      if (option) option.votes += 1;
+      pollVoters.add(key);
+    }
+    return delay({ ...activePoll, options: activePoll.options.map((o) => ({ ...o })) });
+  },
+  async hasUserVotedPoll(pollId, userId) {
+    return delay(pollVoters.has(`${pollId}:${userId}`));
   },
 };

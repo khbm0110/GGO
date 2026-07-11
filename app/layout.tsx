@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Cairo } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import Header from '@/components/Header';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
@@ -31,13 +32,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl" className={cairo.variable}>
+    <html lang="ar" dir="rtl" className={cairo.variable} suppressHydrationWarning>
       <body className="font-sans">
-        <AuthProvider>
-          <Header />
-          <main>{children}</main>
-          <ServiceWorkerRegister />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Header />
+            <main>{children}</main>
+            <ServiceWorkerRegister />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
