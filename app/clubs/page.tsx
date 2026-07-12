@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Shield, Search, Check, Plus, Users, ArrowRight, Target, GitCompareArrows } from 'lucide-react';
+import { Shield, Search, Check, Plus, Users, ArrowRight, Target, GitCompareArrows, Sparkles, Star } from 'lucide-react';
 import TeamLogo from '@/components/TeamLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { data } from '@/lib/data';
@@ -35,9 +35,15 @@ export default function ClubsPage() {
             أندية goolzon
           </h1>
           <p className="text-[var(--fg-subtle)] mt-2 text-sm">ابحث عن ناديك المفضل وتابعه للحصول على آخر أخباره في صفحتك الشخصية.</p>
-          <div className="flex gap-3 mt-3">
+          <div className="flex gap-3 mt-3 flex-wrap">
             <Link href="/topscorers" className="flex items-center gap-1 text-xs font-bold text-primary hover:text-emerald-400">
               <Target size={14} /> الهدافون
+            </Link>
+            <Link href="/assists" className="flex items-center gap-1 text-xs font-bold text-primary hover:text-emerald-400">
+              <Sparkles size={14} /> صناع الأهداف
+            </Link>
+            <Link href="/best-players" className="flex items-center gap-1 text-xs font-bold text-primary hover:text-emerald-400">
+              <Star size={14} /> أفضل اللاعبين
             </Link>
             <Link href="/compare" className="flex items-center gap-1 text-xs font-bold text-primary hover:text-emerald-400">
               <GitCompareArrows size={14} /> مقارنة الفرق

@@ -3,18 +3,21 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { User, ArrowRight, TrendingUp, ShieldAlert, Award, Repeat } from 'lucide-react';
+import { User, ArrowRight, TrendingUp, Award, Repeat, HeartPulse } from 'lucide-react';
 import TeamLogo from '@/components/TeamLogo';
 import { data } from '@/lib/data';
 import type { Player, ClubProfile } from '@/types';
+import type { TransferRecord, InjuryRecord, AwardRecord } from '@/types/community';
 
 export default function PlayerDetailPage() {
   const params = useParams<{ clubId: string; playerId: string }>();
   const [result, setResult] = useState<{ player: Player; club: ClubProfile } | null | undefined>(undefined);
+  const [career, setCareer] = useState<{ transfers: TransferRecord[]; injuries: InjuryRecord[]; awards: AwardRecord[] } | null>(null);
 
   useEffect(() => {
     if (!params?.clubId || !params?.playerId) return;
     data.getPlayerById(params.clubId, params.playerId).then(setResult);
+    data.getPlayerCareerData(params.clubId, params.playerId).then(setCareer);
   }, [params?.clubId, params?.playerId]);
 
   if (result === undefined) {
@@ -65,7 +68,8 @@ export default function PlayerDetailPage() {
             </div>
           </div>
           <h1 className="text-2xl font-black text-[var(--fg)] mt-4 text-center">{player.name}</h1>
-          <p className="text-[var(--fg-subtle)] text-sm">#{player.number} • {club.name}</p>
+          {player.englishName && <p className="text-[var(--fg-faint)] text-xs">{player.englishName}</p>}
+          <p className="text-[var(--fg-subtle)] text-sm">#{player.number} • {club.name}{player.age ? ` • ${player.age} سنة` : ''}</p>
         </div>
 
         <div className="md:col-span-2 space-y-6">
@@ -102,10 +106,35 @@ export default function PlayerDetailPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <ComingSoonCard icon={Repeat} label="سجل الانتقالات" />
-            <ComingSoonCard icon={ShieldAlert} label="الإصابات والعقوبات" />
-            <ComingSoonCard icon={Award} label="الجوائز" />
+          <div className="grid grid-cols-1 gap-4">
+            <CareerSection icon={Repeat} label="سجل الانتقالات" isEmpty={!career || career.transfers.length === 0}>
+              {career?.transfers.map((t, i) => (
+                <div key={i} className="flex items-center justify-between text-sm p-3 bg-[var(--bg-base)] rounded-lg">
+                  <span className="text-[var(--fg-muted)]">{t.from} ← {t.to}</span>
+                  <span className="text-[var(--fg-faint)] text-xs">{t.season} • {t.type === 'loan' ? 'إعارة' : t.type === 'free' ? 'انتقال حر' : 'انتقال نهائي'}</span>
+                </div>
+              ))}
+            </CareerSection>
+
+            <CareerSection icon={HeartPulse} label="الإصابات" isEmpty={!career || career.injuries.length === 0}>
+              {career?.injuries.map((inj, i) => (
+                <div key={i} className="flex items-center justify-between text-sm p-3 bg-[var(--bg-base)] rounded-lg">
+                  <span className="text-[var(--fg-muted)]">{inj.type}</span>
+                  <span className={`text-xs font-bold ${inj.status === 'active' ? 'text-red-400' : 'text-emerald-400'}`}>
+                    {inj.status === 'active' ? 'مستمرة' : 'تعافى'}
+                  </span>
+                </div>
+              ))}
+            </CareerSection>
+
+            <CareerSection icon={Award} label="الجوائز" isEmpty={!career || career.awards.length === 0}>
+              {career?.awards.map((a, i) => (
+                <div key={i} className="flex items-center justify-between text-sm p-3 bg-[var(--bg-base)] rounded-lg">
+                  <span className="text-[var(--fg-muted)]">{a.title}</span>
+                  <span className="text-[var(--fg-faint)] text-xs">{a.season}</span>
+                </div>
+              ))}
+            </CareerSection>
           </div>
         </div>
       </div>
@@ -122,12 +151,27 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function ComingSoonCard({ icon: Icon, label }: { icon: typeof Repeat; label: string }) {
+function CareerSection({
+  icon: Icon,
+  label,
+  isEmpty,
+  children,
+}: {
+  icon: typeof Repeat;
+  label: string;
+  isEmpty: boolean;
+  children?: React.ReactNode;
+}) {
   return (
-    <div className="bg-[color-mix(in_srgb,var(--bg-surface)_50%,transparent)] border border-dashed border-[var(--border-subtle)] rounded-xl p-4 text-center text-[var(--fg-faint)]">
-      <Icon size={20} className="mx-auto mb-2" />
-      <span className="text-xs font-bold">{label}</span>
-      <p className="text-[10px] mt-1">قريبًا</p>
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6">
+      <h3 className="font-bold text-[var(--fg)] mb-4 text-lg border-b border-[var(--border-subtle)] pb-2 flex items-center gap-2">
+        <Icon size={18} className="text-primary" /> {label}
+      </h3>
+      {isEmpty ? (
+        <p className="text-[var(--fg-faint)] text-sm text-center py-4">لا توجد بيانات مسجلة حاليًا — تحتاج ربط مزود بيانات حي (مثل API-Football).</p>
+      ) : (
+        <div className="space-y-2">{children}</div>
+      )}
     </div>
   );
 }

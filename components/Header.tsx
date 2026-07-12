@@ -13,6 +13,7 @@ import type { Article } from '@/types';
 
 const NAV_ITEMS = [
   { label: 'الرئيسية', path: '/' },
+  { label: 'مركز النتائج', path: '/scores' },
   { label: 'الأندية', path: '/clubs' },
   { label: 'دوري الأبطال', path: '/country/champions-league' },
   { label: 'الدوري الإنجليزي', path: '/country/england' },

@@ -1,40 +1,75 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Calendar } from 'lucide-react';
 import { data } from '@/lib/data';
 import TeamLogo from '@/components/TeamLogo';
 import MatchPrediction from '@/components/MatchPrediction';
 import type { Match } from '@/types';
+import { isSameCalendarDay, addDays } from '@/lib/services/dateService';
 
-export default async function MatchesPage() {
-  const matches = await data.getMatches();
+type DayKey = 'YESTERDAY' | 'TODAY' | 'TOMORROW';
+const DAYS: { key: DayKey; label: string; offset: number }[] = [
+  { key: 'YESTERDAY', label: 'أمس', offset: -1 },
+  { key: 'TODAY', label: 'اليوم', offset: 0 },
+  { key: 'TOMORROW', label: 'غدًا', offset: 1 },
+];
 
-  const grouped = matches.reduce((acc: Record<string, Match[]>, match) => {
-    const league = match.league || 'مباريات ودية';
-    if (!acc[league]) acc[league] = [];
-    acc[league].push(match);
-    return acc;
-  }, {});
+export default function MatchesPage() {
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [day, setDay] = useState<DayKey>('TODAY');
+
+  useEffect(() => {
+    data.getMatches().then(setMatches);
+  }, []);
+
+  const grouped = useMemo(() => {
+    const selectedDate = addDays(new Date(), DAYS.find((d) => d.key === day)!.offset);
+    const dayMatches = matches.filter((m) => (m.date ? isSameCalendarDay(new Date(m.date), selectedDate) : false));
+
+    return dayMatches.reduce((acc: Record<string, Match[]>, match) => {
+      const league = match.league || 'مباريات ودية';
+      if (!acc[league]) acc[league] = [];
+      acc[league].push(match);
+      return acc;
+    }, {});
+  }, [matches, day]);
 
   const leagues = Object.keys(grouped);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <h1 className="text-3xl font-black text-[var(--fg)] mb-8 flex items-center border-r-4 border-primary pr-4">
+      <h1 className="text-3xl font-black text-[var(--fg)] mb-6 flex items-center border-r-4 border-primary pr-4">
         <Calendar className="ml-3 text-primary" size={32} />
-        جدول مباريات اليوم
+        جدول المباريات
       </h1>
+
+      <div className="flex gap-2 mb-8">
+        {DAYS.map((d) => (
+          <button
+            key={d.key}
+            onClick={() => setDay(d.key)}
+            className={`flex-1 sm:flex-none px-6 py-2 rounded-lg text-sm font-bold transition-colors border ${
+              day === d.key ? 'text-primary border-primary bg-[var(--bg-surface-2)]' : 'text-[var(--fg-subtle)] border-transparent bg-[var(--bg-surface-2)]'
+            }`}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
 
       <div className="space-y-8">
         {leagues.length === 0 ? (
-          <div className="text-center text-[var(--fg-faint)] py-10 bg-[var(--bg-surface)] rounded-xl">
-            لا توجد مباريات مجدولة لليوم في الدوريات المختارة
+          <div className="text-center text-[var(--fg-faint)] py-10 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)]">
+            لا توجد مباريات مجدولة {day === 'TODAY' ? 'اليوم' : day === 'TOMORROW' ? 'غدًا' : 'أمس'} في الدوريات المغطاة
           </div>
         ) : (
           leagues.map((league) => {
             const leagueMatches = grouped[league];
             return (
               <div key={league} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-lg">
-                <div className="bg-gradient-to-r from-slate-800 to-slate-900 px-6 py-4 border-b border-[var(--border)] flex justify-between items-center">
+                <div className="bg-gradient-to-r from-[var(--bg-surface-2)] to-[var(--bg-surface)] px-6 py-4 border-b border-[var(--border)] flex justify-between items-center">
                   <div className="flex items-center gap-3">
                     <div className="w-1 h-6 bg-accent rounded-full"></div>
                     <h2 className="font-bold text-[var(--fg)] text-lg">{league}</h2>

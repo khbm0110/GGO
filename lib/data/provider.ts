@@ -1,5 +1,5 @@
 import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, Player, MatchDetails } from '@/types';
-import type { Prediction, LeaderboardEntry, Poll } from '@/types/community';
+import type { Prediction, LeaderboardEntry, Poll, TransferRecord, InjuryRecord, AwardRecord, CoachCareerEntry } from '@/types/community';
 
 // This is the single "contract" the whole app talks to for data.
 // Right now `mock-provider.ts` implements it using local seed data
@@ -32,6 +32,7 @@ export interface DataProvider {
 
   getCommentsForArticle(articleId: string): Promise<Comment[]>;
   getAllComments(): Promise<Comment[]>;
+  addComment(comment: { articleId: string; userId: string; text: string; parentId?: string }): Promise<Comment>;
   updateCommentStatus(id: string, status: Comment['status']): Promise<void>;
 
   getUsers(): Promise<User[]>;
@@ -59,4 +60,28 @@ export interface DataProvider {
   getActivePoll(): Promise<Poll | null>;
   votePoll(pollId: string, optionId: string, userId: string): Promise<Poll>;
   hasUserVotedPoll(pollId: string, userId: string): Promise<boolean>;
+
+  // Player career data (transfers/injuries/awards) and coach career history.
+  // ⚠️ Real, complete data for every player/coach requires a live provider
+  // (e.g. API-Football). What's here is a demo shape + a couple of
+  // illustrative examples so the UI and data contract are ready.
+  getPlayerCareerData(clubId: string, playerId: string): Promise<{
+    transfers: TransferRecord[];
+    injuries: InjuryRecord[];
+    awards: AwardRecord[];
+  }>;
+  getCoachCareer(clubId: string): Promise<CoachCareerEntry[]>;
+
+  // User preferences — previously client-only state, now persisted so
+  // they survive login/logout and page refresh.
+  getFollowedTeams(userId: string): Promise<string[]>;
+  toggleFollowedTeam(userId: string, teamName: string): Promise<void>;
+  getFollowedLeagues(userId: string): Promise<string[]>;
+  toggleFollowedLeague(userId: string, league: string): Promise<void>;
+  getFavorites(userId: string): Promise<string[]>;
+  toggleFavoriteArticle(userId: string, articleId: string): Promise<void>;
+  getActivityLog(userId: string): Promise<{ id: string; text: string; time: string }[]>;
+  logActivity(userId: string, text: string): Promise<void>;
+  getDreamSquad(userId: string): Promise<Record<number, any>>;
+  updateDreamSquad(userId: string, squad: Record<number, any>): Promise<void>;
 }

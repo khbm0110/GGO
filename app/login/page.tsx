@@ -70,10 +70,6 @@ export default function LoginPage() {
             إنشاء حساب
           </Link>
         </p>
-
-        <p className="text-[11px] text-amber-500/80 mt-6 border-t border-[var(--border-subtle)] pt-4">
-          ⚠️ وضع تطوير مؤقت: هذا النموذج لا يتحقق من كلمة مرور حقيقية بعد. سيتم استبداله بمصادقة Appwrite الحقيقية في المرحلة الأخيرة.
-        </p>
       </div>
     </div>
   );

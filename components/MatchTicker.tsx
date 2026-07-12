@@ -12,10 +12,10 @@ export default function MatchTicker({ matches }: MatchTickerProps) {
   return (
     <div className="bg-[var(--bg-base)] border-b border-[var(--border-subtle)] py-3 overflow-x-auto no-scrollbar">
       <div className="container mx-auto px-4 flex space-x-4 space-x-reverse min-w-max items-center">
-        <div className="flex items-center text-accent text-xs font-bold pl-4 border-l border-[var(--border-subtle)]">
+        <Link href="/scores" className="flex items-center text-accent text-xs font-bold pl-4 border-l border-[var(--border-subtle)] hover:text-white transition-colors">
           <span className="animate-pulse w-2 h-2 bg-accent rounded-full ml-2"></span>
           مباريات اليوم
-        </div>
+        </Link>
 
         {matches.length === 0 ? (
           <div className="text-[var(--fg-faint)] text-xs px-4">لا توجد مباريات جارية اليوم في الدوريات المختارة</div>

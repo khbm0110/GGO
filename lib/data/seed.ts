@@ -28,22 +28,92 @@ export const MOCK_MATCHES: Match[] = [
     {
         id: 'm1', homeTeam: 'الهلال', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/f/fa/Al_Hilal_SFC_logo.svg',
         awayTeam: 'النصر', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/a/a1/Al_Nassr_FC_Logo.svg',
-        scoreHome: 2, scoreAway: 1, time: '75\'', status: 'LIVE', league: 'الدوري السعودي', country: Category.SAUDI
+        scoreHome: 2, scoreAway: 1, time: '75\'', status: 'LIVE', league: 'الدوري السعودي', country: Category.SAUDI,
+        date: '2026-07-12T20:00:00.000Z', round: 'الجولة 28', venue: 'ملعب الأمير فيصل بن فهد'
+    },
+    {
+        id: 'm5', homeTeam: 'النصر', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/a/a1/Al_Nassr_FC_Logo.svg',
+        awayTeam: 'الاتحاد', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/f/f9/Ittihad_FC_logo.png',
+        scoreHome: null, scoreAway: null, time: '21:00', status: 'UPCOMING', league: 'الدوري السعودي', country: Category.SAUDI,
+        date: '2026-07-20T18:00:00.000Z', round: 'الجولة 29', venue: 'ملعب الأول بارك'
+    },
+    {
+        id: 'm6', homeTeam: 'الشباب', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/2/2d/Al_Shabab_FC_logo.png',
+        awayTeam: 'النصر', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/a/a1/Al_Nassr_FC_Logo.svg',
+        scoreHome: null, scoreAway: null, time: '19:30', status: 'UPCOMING', league: 'دوري أبطال آسيا', country: Category.SAUDI,
+        date: '2026-08-02T16:30:00.000Z', round: 'ربع النهائي', venue: 'ملعب الأمير فيصل بن فهد'
+    },
+    {
+        id: 'm7', homeTeam: 'النصر', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/a/a1/Al_Nassr_FC_Logo.svg',
+        awayTeam: 'الأهلي', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/8/8a/Al_Ahli_Saudi_FC_logo.png',
+        scoreHome: 3, scoreAway: 2, time: 'انتهت', status: 'FINISHED', league: 'الدوري السعودي', country: Category.SAUDI,
+        date: '2026-07-01T18:00:00.000Z', round: 'الجولة 27', venue: 'ملعب الأول بارك'
+    },
+    {
+        id: 'm8', homeTeam: 'الهلال', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/f/fa/Al_Hilal_SFC_logo.svg',
+        awayTeam: 'القادسية', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/9/9b/Al-Qadsiah_FC_logo.png',
+        scoreHome: null, scoreAway: null, time: '20:00', status: 'UPCOMING', league: 'الدوري السعودي', country: Category.SAUDI,
+        date: '2026-07-22T17:00:00.000Z', round: 'الجولة 29', venue: 'ملعب الأمير فيصل بن فهد'
+    },
+    {
+        id: 'm10', homeTeam: 'الأهلي', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/8/82/Al_Ahly_SC_logo.png',
+        awayTeam: 'الزمالك', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/9/9d/Zamalek_SC_logo.png',
+        scoreHome: 1, scoreAway: 1, time: '60\'', status: 'LIVE', league: 'الدوري المصري الممتاز', country: Category.EGYPT,
+        date: '2026-07-12T19:00:00.000Z', round: 'الجولة 22', venue: 'ستاد القاهرة الدولي'
+    },
+    {
+        id: 'm11', homeTeam: 'اتحاد الجزائر', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/2/2a/USM_Alger_logo.png',
+        awayTeam: 'شباب بلوزداد', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/6/6e/CR_Belouizdad_logo.png',
+        scoreHome: null, scoreAway: null, time: '20:00', status: 'UPCOMING', league: 'الدوري الجزائري', country: Category.ALGERIA,
+        date: '2026-07-15T18:00:00.000Z', round: 'الجولة 15'
+    },
+    {
+        id: 'm12', homeTeam: 'الترجي التونسي', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/8/85/Esperance_Sportive_de_Tunis_logo.png',
+        awayTeam: 'النادي الصفاقسي', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/2/29/CS_Sfaxien_logo.png',
+        scoreHome: 2, scoreAway: 0, time: 'انتهت', status: 'FINISHED', league: 'الدوري التونسي', country: Category.TUNISIA,
+        date: '2026-07-10T18:00:00.000Z', round: 'الجولة 20'
+    },
+    {
+        id: 'm13', homeTeam: 'الرجاء البيضاوي', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/1/16/Raja_CA_logo.svg',
+        awayTeam: 'الوداد البيضاوي', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/3/30/Widad_Athletic_Club_logo.svg',
+        scoreHome: null, scoreAway: null, time: '21:00', status: 'UPCOMING', league: 'البطولة الاحترافية المغربية', country: Category.MOROCCO,
+        date: '2026-07-18T19:00:00.000Z', round: 'الديربي • الجولة 24'
+    },
+    {
+        id: 'm14', homeTeam: 'الفيصلي', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/2/2e/Al-Faisaly_SC_logo.png',
+        awayTeam: 'الوحدات', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/8/85/Al-Wehdat_SC_logo.png',
+        scoreHome: 1, scoreAway: 2, time: 'انتهت', status: 'FINISHED', league: 'الدوري الأردني', country: Category.JORDAN,
+        date: '2026-07-08T18:00:00.000Z', round: 'الجولة 18'
+    },
+    {
+        id: 'm15', homeTeam: 'القوة الجوية', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/9/94/Al-Quwa_Al-Jawiya_logo.png',
+        awayTeam: 'الشرطة العراقي', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/6/6b/Al-Shorta_SC_logo.png',
+        scoreHome: null, scoreAway: null, time: '19:00', status: 'UPCOMING', league: 'الدوري العراقي الممتاز', country: Category.IRAQ,
+        date: '2026-07-16T17:00:00.000Z', round: 'الجولة 19'
+    },
+    {
+        id: 'm16', homeTeam: 'الأنصار', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/f/f0/Al_Ansar_FC_logo.png',
+        awayTeam: 'العهد', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/7/7e/Al_Ahed_FC_logo.png',
+        scoreHome: 0, scoreAway: 0, time: '35\'', status: 'LIVE', league: 'الدوري اللبناني', country: Category.LEBANON,
+        date: '2026-07-12T18:30:00.000Z', round: 'الجولة 12'
     },
     {
         id: 'm2', homeTeam: 'ليفربول', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg',
         awayTeam: 'مانشستر سيتي', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg',
-        scoreHome: 0, scoreAway: 0, time: '22:00', status: 'UPCOMING', league: 'الدوري الإنجليزي', country: Category.ENGLAND
+        scoreHome: 0, scoreAway: 0, time: '22:00', status: 'UPCOMING', league: 'الدوري الإنجليزي', country: Category.ENGLAND,
+        date: '2026-07-13T19:00:00.000Z', round: 'الجولة 34'
     },
     {
         id: 'm3', homeTeam: 'ريال مدريد', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg',
         awayTeam: 'برشلونة', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg',
-        scoreHome: 3, scoreAway: 1, time: 'انتهت', status: 'FINISHED', league: 'الدوري الإسباني', country: Category.SPAIN
+        scoreHome: 3, scoreAway: 1, time: 'انتهت', status: 'FINISHED', league: 'الدوري الإسباني', country: Category.SPAIN,
+        date: '2026-07-11T20:00:00.000Z', round: 'الجولة 35'
     },
     {
         id: 'm4', homeTeam: 'العين', homeLogo: 'https://upload.wikimedia.org/wikipedia/en/a/a3/Al_Ain_FC_Logo.png',
         awayTeam: 'الوصل', awayLogo: 'https://upload.wikimedia.org/wikipedia/en/f/f2/Al_Wasl_FC_Logo.png',
-        scoreHome: 1, scoreAway: 0, time: '30\'', status: 'LIVE', league: 'الدوري الإماراتي', country: Category.UAE
+        scoreHome: 1, scoreAway: 0, time: '30\'', status: 'LIVE', league: 'الدوري الإماراتي', country: Category.UAE,
+        date: '2026-07-12T17:00:00.000Z', round: 'الجولة 20'
     }
 ];
 
@@ -77,12 +147,12 @@ export const CLUB_DATABASE: Record<string, ClubProfile> = {
     country: Category.SAUDI,
     trophies: [{ name: 'الدوري السعودي', count: 9 }, { name: 'كأس الملك', count: 6 }, { name: 'كأس ولي العهد', count: 3 }],
     squad: [
-      { id: 'cr7', name: 'كريستيانو رونالدو', number: 7, position: 'ST', rating: 86, nationality: 'https://flagcdn.com/w40/pt.png', stats: { pac: 77, sho: 88, pas: 75, dri: 80, def: 34, phy: 74 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cr7', marketValue: 15000000, seasonStats: { matches: 24, goals: 26, assists: 7, rating: 8.1 } },
-      { id: 'tal', name: 'أندرسون تاليسكا', number: 94, position: 'FWD', rating: 82, nationality: 'https://flagcdn.com/w40/br.png', stats: { pac: 80, sho: 84, pas: 78, dri: 81, def: 45, phy: 72 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tal', marketValue: 22000000, seasonStats: { matches: 22, goals: 14, assists: 9, rating: 7.6 } },
-      { id: 'man', name: 'ساديو ماني', number: 10, position: 'LW', rating: 84, nationality: 'https://flagcdn.com/w40/sn.png', stats: { pac: 85, sho: 83, pas: 79, dri: 86, def: 44, phy: 70 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mane', marketValue: 18000000, seasonStats: { matches: 20, goals: 11, assists: 6, rating: 7.7 } },
-      { id: 'ota', name: 'أوتافيو', number: 25, position: 'MID', rating: 81, nationality: 'https://flagcdn.com/w40/pt.png', stats: { pac: 78, sho: 74, pas: 82, dri: 83, def: 65, phy: 71 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=otavio' },
-      { id: 'bro', name: 'مارسيلو بروزوفيتش', number: 77, position: 'CM', rating: 83, nationality: 'https://flagcdn.com/w40/hr.png', stats: { pac: 68, sho: 71, pas: 84, dri: 79, def: 78, phy: 76 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=brozo' },
-      { id: 'lap', name: 'إيميريك لابورت', number: 27, position: 'CB', rating: 83, nationality: 'https://flagcdn.com/w40/es.png', stats: { pac: 62, sho: 50, pas: 72, dri: 68, def: 85, phy: 79 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=laporte' },
+      { id: 'cr7', name: 'كريستيانو رونالدو', englishName: 'Cristiano Ronaldo', age: 40, number: 7, position: 'ST', rating: 86, nationality: 'https://flagcdn.com/w40/pt.png', stats: { pac: 77, sho: 88, pas: 75, dri: 80, def: 34, phy: 74 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cr7', marketValue: 15000000, seasonStats: { matches: 24, goals: 26, assists: 7, rating: 8.1 } },
+      { id: 'tal', name: 'أندرسون تاليسكا', englishName: 'Anderson Talisca', age: 30, number: 94, position: 'FWD', rating: 82, nationality: 'https://flagcdn.com/w40/br.png', stats: { pac: 80, sho: 84, pas: 78, dri: 81, def: 45, phy: 72 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=tal', marketValue: 22000000, seasonStats: { matches: 22, goals: 14, assists: 9, rating: 7.6 } },
+      { id: 'man', name: 'ساديو ماني', englishName: 'Sadio Mané', age: 33, number: 10, position: 'LW', rating: 84, nationality: 'https://flagcdn.com/w40/sn.png', stats: { pac: 85, sho: 83, pas: 79, dri: 86, def: 44, phy: 70 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mane', marketValue: 18000000, seasonStats: { matches: 20, goals: 11, assists: 6, rating: 7.7 } },
+      { id: 'ota', name: 'أوتافيو', englishName: 'Otávio', age: 29, number: 25, position: 'MID', rating: 81, nationality: 'https://flagcdn.com/w40/pt.png', stats: { pac: 78, sho: 74, pas: 82, dri: 83, def: 65, phy: 71 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=otavio', marketValue: 25000000, seasonStats: { matches: 28, goals: 6, assists: 10, rating: 7.5 } },
+      { id: 'bro', name: 'مارسيلو بروزوفيتش', englishName: 'M. Brozović', age: 31, number: 77, position: 'CM', rating: 83, nationality: 'https://flagcdn.com/w40/hr.png', stats: { pac: 68, sho: 71, pas: 84, dri: 79, def: 78, phy: 76 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=brozo', marketValue: 12000000, seasonStats: { matches: 26, goals: 2, assists: 5, rating: 7.4 } },
+      { id: 'lap', name: 'إيميريك لابورت', englishName: 'Aymeric Laporte', age: 31, number: 27, position: 'CB', rating: 83, nationality: 'https://flagcdn.com/w40/es.png', stats: { pac: 62, sho: 50, pas: 72, dri: 68, def: 85, phy: 79 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=laporte', marketValue: 18000000, seasonStats: { matches: 30, goals: 1, assists: 1, rating: 7.3 } },
     ]
   },
   'hilal': {
@@ -102,13 +172,13 @@ export const CLUB_DATABASE: Record<string, ClubProfile> = {
     country: Category.SAUDI,
     trophies: [{ name: 'الدوري السعودي', count: 18 }, { name: 'دوري أبطال آسيا', count: 4 }, { name: 'كأس الملك', count: 10 }],
     squad: [
-      { id: 'ney', name: 'نيمار جونيور', number: 10, position: 'LW', rating: 89, nationality: 'https://flagcdn.com/w40/br.png', stats: { pac: 86, sho: 83, pas: 85, dri: 93, def: 37, phy: 61 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ney', marketValue: 30000000, seasonStats: { matches: 15, goals: 9, assists: 12, rating: 8.4 } },
-      { id: 'mit', name: 'ألكسندر ميتروفيتش', number: 9, position: 'ST', rating: 84, nationality: 'https://flagcdn.com/w40/rs.png', stats: { pac: 68, sho: 86, pas: 69, dri: 74, def: 42, phy: 88 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mitro', marketValue: 20000000, seasonStats: { matches: 23, goals: 19, assists: 4, rating: 7.8 } },
-      { id: 'sal', name: 'سالم الدوسري', number: 29, position: 'LW', rating: 79, nationality: 'https://flagcdn.com/w40/sa.png', stats: { pac: 86, sho: 76, pas: 75, dri: 82, def: 45, phy: 68 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=salem', marketValue: 12000000, seasonStats: { matches: 24, goals: 16, assists: 8, rating: 7.9 } },
-      { id: 'nev', name: 'روبن نيفيز', number: 8, position: 'CM', rating: 83, nationality: 'https://flagcdn.com/w40/pt.png', stats: { pac: 60, sho: 75, pas: 86, dri: 78, def: 76, phy: 73 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=neves' },
-      { id: 'sav', name: 'سيرجي سافيتش', number: 22, position: 'CM', rating: 84, nationality: 'https://flagcdn.com/w40/rs.png', stats: { pac: 68, sho: 79, pas: 82, dri: 81, def: 78, phy: 84 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=savic' },
-      { id: 'mal', name: 'مالكوم', number: 77, position: 'RW', rating: 82, nationality: 'https://flagcdn.com/w40/br.png', stats: { pac: 84, sho: 80, pas: 79, dri: 83, def: 40, phy: 68 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=malcom' },
-      { id: 'bon', name: 'ياسين بونو', number: 37, position: 'GK', rating: 85, nationality: 'https://flagcdn.com/w40/ma.png', stats: { pac: 84, sho: 82, pas: 76, dri: 86, def: 45, phy: 80 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bono' },
+      { id: 'ney', name: 'نيمار جونيور', englishName: 'Neymar Jr.', age: 33, number: 10, position: 'LW', rating: 89, nationality: 'https://flagcdn.com/w40/br.png', stats: { pac: 86, sho: 83, pas: 85, dri: 93, def: 37, phy: 61 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=ney', marketValue: 30000000, seasonStats: { matches: 15, goals: 9, assists: 12, rating: 8.4 } },
+      { id: 'mit', name: 'ألكسندر ميتروفيتش', englishName: 'A. Mitrović', age: 30, number: 9, position: 'ST', rating: 84, nationality: 'https://flagcdn.com/w40/rs.png', stats: { pac: 68, sho: 86, pas: 69, dri: 74, def: 42, phy: 88 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=mitro', marketValue: 20000000, seasonStats: { matches: 23, goals: 19, assists: 4, rating: 7.8 } },
+      { id: 'sal', name: 'سالم الدوسري', englishName: 'Salem Al-Dawsari', age: 34, number: 29, position: 'LW', rating: 79, nationality: 'https://flagcdn.com/w40/sa.png', stats: { pac: 86, sho: 76, pas: 75, dri: 82, def: 45, phy: 68 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=salem', marketValue: 12000000, seasonStats: { matches: 24, goals: 16, assists: 8, rating: 7.9 } },
+      { id: 'nev', name: 'روبن نيفيز', englishName: 'Rúben Neves', age: 27, number: 8, position: 'CM', rating: 83, nationality: 'https://flagcdn.com/w40/pt.png', stats: { pac: 60, sho: 75, pas: 86, dri: 78, def: 76, phy: 73 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=neves', marketValue: 22000000, seasonStats: { matches: 27, goals: 4, assists: 6, rating: 7.6 } },
+      { id: 'sav', name: 'سيرجي سافيتش', englishName: 'S. Savić', age: 28, number: 22, position: 'CM', rating: 84, nationality: 'https://flagcdn.com/w40/rs.png', stats: { pac: 68, sho: 79, pas: 82, dri: 81, def: 78, phy: 84 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=savic', marketValue: 15000000, seasonStats: { matches: 25, goals: 5, assists: 3, rating: 7.4 } },
+      { id: 'mal', name: 'مالكوم', englishName: 'Malcom', age: 27, number: 77, position: 'RW', rating: 82, nationality: 'https://flagcdn.com/w40/br.png', stats: { pac: 84, sho: 80, pas: 79, dri: 83, def: 40, phy: 68 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=malcom', marketValue: 25000000, seasonStats: { matches: 22, goals: 8, assists: 7, rating: 7.5 } },
+      { id: 'bon', name: 'ياسين بونو', englishName: 'Yassine Bounou', age: 34, number: 37, position: 'GK', rating: 85, nationality: 'https://flagcdn.com/w40/ma.png', stats: { pac: 84, sho: 82, pas: 76, dri: 86, def: 45, phy: 80 }, image: 'https://api.dicebear.com/7.x/avataaars/svg?seed=bono', marketValue: 15000000, seasonStats: { matches: 24, goals: 0, assists: 0, rating: 7.7 } },
     ]
   },
   'generic': {

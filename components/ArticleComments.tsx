@@ -16,25 +16,14 @@ export default function ArticleComments({ articleId }: { articleId: string }) {
     data.getCommentsForArticle(articleId).then(setComments);
   }, [articleId]);
 
-  function handleAddComment(text: string, parentId?: string) {
+  async function handleAddComment(text: string, parentId?: string) {
     if (!currentUser) return;
-    const newComment: Comment = {
-      id: `local-${Date.now()}`,
-      user: currentUser.name,
-      avatar: currentUser.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.username}`,
-      time: new Date().toISOString(),
-      text,
-      likes: 0,
-      articleId,
-      status: 'visible',
-      parentId,
-    };
-    // TEMP: local-only, resets on refresh. Will be persisted to a real
-    // "comments" collection once Appwrite is connected.
+    const newComment = await data.addComment({ articleId, userId: currentUser.id, text, parentId });
     setComments((prev) => [...prev, newComment]);
   }
 
-  function handleReportComment(commentId: string) {
+  async function handleReportComment(commentId: string) {
+    await data.updateCommentStatus(commentId, 'reported');
     setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, status: 'reported' } : c)));
   }
 

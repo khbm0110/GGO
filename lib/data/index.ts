@@ -1,7 +1,7 @@
-import { mockProvider } from './mock-provider';
+import { supabaseProvider } from './supabase-provider';
 import type { DataProvider } from './provider';
 
-// 👉 THE ONLY LINE THAT WILL CHANGE WHEN APPWRITE IS READY:
-// import { appwriteProvider } from './appwrite-provider';
-// export const data: DataProvider = appwriteProvider;
-export const data: DataProvider = mockProvider;
+// Switched from mock-provider to the real Supabase-backed provider.
+// Every page/component kept working with zero changes because they
+// only ever import `data` from this one file.
+export const data: DataProvider = supabaseProvider;

@@ -6,11 +6,23 @@ export enum Category {
   KUWAIT = 'الكويت',
   OMAN = 'عمان',
   BAHRAIN = 'البحرين',
+  EGYPT = 'مصر',
+  ALGERIA = 'الجزائر',
+  TUNISIA = 'تونس',
+  MOROCCO = 'المغرب',
+  JORDAN = 'الأردن',
+  IRAQ = 'العراق',
+  LEBANON = 'لبنان',
+  LIBYA = 'ليبيا',
+  SUDAN = 'السودان',
+  YEMEN = 'اليمن',
+  PALESTINE = 'فلسطين',
   ENGLAND = 'الدوري الإنجليزي',
   SPAIN = 'الدوري الإسباني',
   ITALY = 'الدوري الإيطالي',
   GERMANY = 'الدوري الألماني',
   CHAMPIONS_LEAGUE = 'دوري أبطال أوروبا',
+  ARAB_CUP = 'كأس العرب',
   ANALYSIS = 'تحليلات',
   VIDEO = 'فيديو',
   BREAKING = 'عاجل'
@@ -79,6 +91,9 @@ export interface Match {
   status: 'UPCOMING' | 'LIVE' | 'FINISHED';
   league: string;
   country: Category;
+  date?: string;   // ISO date, used for club fixtures list
+  round?: string;  // e.g. "الجولة 36" or "نهائي"
+  venue?: string;
 }
 
 export interface MatchEvent {
@@ -141,6 +156,8 @@ export interface Player {
   id: string;
   apiFootballId?: number; // Crucial for linking performance stats
   name: string;
+  englishName?: string;
+  age?: number;
   number: number;
   position: 'GK' | 'DEF' | 'MID' | 'FWD' | 'ST' | 'CB' | 'CM' | 'CDM' | 'CAM' | 'RW' | 'LW' | 'LB' | 'RB' | 'RM' | 'LM';
   rating: number;
@@ -187,6 +204,7 @@ export interface ClubProfile {
   squad: Player[];
   trophies: { name: string; count: number }[];
   country: Category;
+  history?: string; // free-text club history, written by editors/admins
 }
 
 export interface ExtractedMatchFacts {

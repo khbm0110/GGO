@@ -7,14 +7,17 @@ import { User, ArrowRight, Award, ListChecks } from 'lucide-react';
 import TeamLogo from '@/components/TeamLogo';
 import { data } from '@/lib/data';
 import type { ClubProfile } from '@/types';
+import type { CoachCareerEntry } from '@/types/community';
 
 export default function CoachPage() {
   const params = useParams<{ clubId: string }>();
   const [club, setClub] = useState<ClubProfile | null | undefined>(undefined);
+  const [career, setCareer] = useState<CoachCareerEntry[]>([]);
 
   useEffect(() => {
     if (!params?.clubId) return;
     data.getClubById(params.clubId).then(setClub);
+    data.getCoachCareer(params.clubId).then(setCareer);
   }, [params?.clubId]);
 
   if (club === undefined) {
@@ -31,6 +34,8 @@ export default function CoachPage() {
       </div>
     );
   }
+
+  const achievements = career.filter((c) => c.achievement);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -51,15 +56,33 @@ export default function CoachPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-        <div className="bg-[color-mix(in_srgb,var(--bg-surface)_50%,transparent)] border border-dashed border-[var(--border-subtle)] rounded-xl p-6 text-center text-[var(--fg-faint)]">
-          <ListChecks size={22} className="mx-auto mb-2" />
-          <span className="text-sm font-bold">السجل التدريبي</span>
-          <p className="text-xs mt-1">قريبًا</p>
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-6">
+          <h3 className="font-bold text-[var(--fg)] mb-4 flex items-center gap-2"><ListChecks size={18} className="text-primary" /> السجل التدريبي</h3>
+          {career.length === 0 ? (
+            <p className="text-[var(--fg-faint)] text-sm text-center py-4">لا يوجد سجل مسجل حاليًا — يحتاج ربط مزود بيانات حي.</p>
+          ) : (
+            <ul className="space-y-3">
+              {career.map((entry, i) => (
+                <li key={i} className="text-sm">
+                  <span className="text-[var(--fg)] font-bold">{entry.club}</span>
+                  <span className="text-[var(--fg-faint)]"> — {entry.from} {entry.to ? `إلى ${entry.to}` : '(حاليًا)'}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        <div className="bg-[color-mix(in_srgb,var(--bg-surface)_50%,transparent)] border border-dashed border-[var(--border-subtle)] rounded-xl p-6 text-center text-[var(--fg-faint)]">
-          <Award size={22} className="mx-auto mb-2" />
-          <span className="text-sm font-bold">الإنجازات</span>
-          <p className="text-xs mt-1">قريبًا</p>
+
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-6">
+          <h3 className="font-bold text-[var(--fg)] mb-4 flex items-center gap-2"><Award size={18} className="text-primary" /> الإنجازات</h3>
+          {achievements.length === 0 ? (
+            <p className="text-[var(--fg-faint)] text-sm text-center py-4">لا توجد إنجازات مسجلة حاليًا.</p>
+          ) : (
+            <ul className="space-y-3">
+              {achievements.map((entry, i) => (
+                <li key={i} className="text-sm text-[var(--fg-muted)]">🏆 {entry.achievement} <span className="text-[var(--fg-faint)]">({entry.club})</span></li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     </div>

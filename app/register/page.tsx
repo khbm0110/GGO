@@ -91,10 +91,6 @@ export default function RegisterPage() {
             تسجيل الدخول
           </Link>
         </p>
-
-        <p className="text-[11px] text-amber-500/80 mt-6 border-t border-[var(--border-subtle)] pt-4">
-          ⚠️ وضع تطوير مؤقت: لا يتم حفظ الحسابات فعليًا بعد. سيتم استبداله بمصادقة Appwrite الحقيقية في المرحلة الأخيرة.
-        </p>
       </div>
     </div>
   );

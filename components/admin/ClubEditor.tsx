@@ -76,6 +76,18 @@ export default function ClubEditor({ initialData, onSave, onCancel }: ClubEditor
             <Field label="عدد المشجعين" name="fanCount" value={String(club.fanCount || 0)} onChange={handleChange} type="number" />
           </div>
 
+          <div>
+            <label className="block text-sm text-[var(--fg-subtle)] mb-1">تاريخ النادي (نص حر)</label>
+            <textarea
+              name="history"
+              value={club.history || ''}
+              onChange={(e) => setClub((prev) => ({ ...prev, history: e.target.value }))}
+              rows={6}
+              placeholder="اكتب هنا قصة تأسيس النادي وأهم محطاته التاريخية..."
+              className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--fg)]"
+            />
+          </div>
+
           <p className="text-[11px] text-amber-500/80 border-t border-[var(--border-subtle)] pt-3">
             ⚠️ تعديل قائمة اللاعبين والتشكيلة والبطولات سيُضاف في نسخة قادمة من محرر النادي.
           </p>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowRight, BarChart2, Users, Share2, AlertCircle, Loader2, MapPin } from 'lucide-react';
 import TeamLogo from '@/components/TeamLogo';
 import MatchPrediction from '@/components/MatchPrediction';
+import MatchLineupPitch from '@/components/MatchLineupPitch';
 import { data } from '@/lib/data';
 import type { Match, MatchDetails } from '@/types';
 
@@ -112,24 +113,7 @@ export default function MatchCenterPage() {
               </div>
             </div>
           ) : activeTab === 'LINEUPS' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-bold text-[var(--fg)] mb-3 text-center">{match.homeTeam}</h4>
-                <ul className="text-[var(--fg-muted)] text-sm space-y-2 text-center">
-                  {details.lineups.home.map((p, i) => (
-                    <li key={i} className="bg-[color-mix(in_srgb,var(--bg-surface-2)_50%,transparent)] p-2 rounded-md">{p}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold text-[var(--fg)] mb-3 text-center">{match.awayTeam}</h4>
-                <ul className="text-[var(--fg-muted)] text-sm space-y-2 text-center">
-                  {details.lineups.away.map((p, i) => (
-                    <li key={i} className="bg-[color-mix(in_srgb,var(--bg-surface-2)_50%,transparent)] p-2 rounded-md">{p}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+            <MatchLineupPitch homeTeam={match.homeTeam} awayTeam={match.awayTeam} />
           ) : activeTab === 'SUMMARY' ? (
             <div>
               <p className="text-[var(--fg-subtle)] text-sm mb-4">{details.summary}</p>

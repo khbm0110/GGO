@@ -6,6 +6,7 @@ import MatchTicker from '@/components/MatchTicker';
 import StandingsWidget from '@/components/StandingsWidget';
 import PollWidget from '@/components/PollWidget';
 import { Category } from '@/types';
+import { isSameCalendarDay } from '@/lib/services/dateService';
 
 function SectionHeader({ title, link }: { title: string; link?: string }) {
   return (
@@ -34,9 +35,12 @@ export default async function HomePage() {
     .slice(0, 9);
   const sideNews = articles.filter((a) => a.id !== featuredArticle?.id).slice(0, 5);
 
+  const today = new Date();
+  const todaysMatches = matches.filter((m) => (m.date ? isSameCalendarDay(new Date(m.date), today) : false));
+
   return (
     <div className="pb-12">
-      <MatchTicker matches={matches} />
+      <MatchTicker matches={todaysMatches} />
 
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

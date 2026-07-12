@@ -9,3 +9,15 @@ export const formatTimeAgo = (dateString: string): string => {
     return 'منذ زمن';
   }
 };
+
+// Compares calendar day (not exact time) between two dates — used for
+// "matches today / tomorrow / yesterday" filtering across the site.
+export function isSameCalendarDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+export function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}

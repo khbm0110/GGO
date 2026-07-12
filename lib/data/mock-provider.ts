@@ -1,5 +1,5 @@
 import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, MatchDetails } from '@/types';
-import type { Prediction, LeaderboardEntry, Poll } from '@/types/community';
+import type { Prediction, LeaderboardEntry, Poll, TransferRecord, InjuryRecord, AwardRecord, CoachCareerEntry } from '@/types/community';
 import type { DataProvider } from './provider';
 import {
   INITIAL_ARTICLES,
@@ -33,6 +33,47 @@ let activePoll: Poll = {
   ],
 };
 const pollVoters = new Set<string>(); // "pollId:userId"
+
+// ⚠️ DEMO DATA for only a couple of players/coaches, to show the data
+// shape a real API-Football integration would fill in. Every other
+// player/coach correctly returns empty arrays — that's the honest state,
+// not a bug — until a live data provider is connected.
+const PLAYER_CAREER_DATA: Record<string, { transfers: TransferRecord[]; injuries: InjuryRecord[]; awards: AwardRecord[] }> = {
+  cr7: {
+    transfers: [
+      { season: '2023/2024', from: 'مانشستر يونايتد', to: 'النصر', type: 'permanent' },
+      { season: '2021/2022', from: 'يوفنتوس', to: 'مانشستر يونايتد', type: 'permanent' },
+    ],
+    injuries: [],
+    awards: [
+      { title: 'أفضل هداف في الدوري السعودي', season: '2023/2024' },
+    ],
+  },
+  ney: {
+    transfers: [
+      { season: '2023/2024', from: 'باريس سان جيرمان', to: 'الهلال', type: 'permanent' },
+    ],
+    injuries: [
+      { date: '2023-10-17', type: 'إصابة في الرباط الصليبي', status: 'recovered', expectedReturn: '2024-08-01' },
+    ],
+    awards: [],
+  },
+};
+
+const COACH_CAREER_DATA: Record<string, CoachCareerEntry[]> = {
+  nassr: [
+    { club: 'النصر', from: '2023', achievement: 'بطولة كأس الملك 2024' },
+    { club: 'نادٍ سابق', from: '2019', to: '2023' },
+  ],
+};
+
+// Per-user preference state, keyed by userId. Same in-memory caveat as
+// everything else in this file.
+const followedTeamsByUser = new Map<string, Set<string>>();
+const followedLeaguesByUser = new Map<string, Set<string>>();
+const favoritesByUser = new Map<string, Set<string>>();
+const activityByUser = new Map<string, { id: string; text: string; time: string }[]>();
+const dreamSquadByUser = new Map<string, Record<number, any>>();
 
 function calculatePoints(prediction: Prediction, match: Match): number {
   if (match.scoreHome === null || match.scoreAway === null || match.scoreHome === undefined || match.scoreAway === undefined) return 0;
@@ -145,6 +186,22 @@ export const mockProvider: DataProvider = {
   async getAllComments() {
     return delay([...comments]);
   },
+  async addComment({ articleId, userId, text, parentId }) {
+    const user = users.find((u) => u.id === userId);
+    const newComment: Comment = {
+      id: `comment-${Date.now()}`,
+      user: user?.name || 'مستخدم',
+      avatar: user?.avatar || '',
+      time: new Date().toISOString(),
+      text,
+      likes: 0,
+      articleId,
+      status: 'visible',
+      parentId,
+    };
+    comments.push(newComment);
+    return delay(newComment);
+  },
   async updateCommentStatus(id, status) {
     const idx = comments.findIndex((c) => c.id === id);
     if (idx > -1) comments[idx] = { ...comments[idx], status };
@@ -251,5 +308,62 @@ export const mockProvider: DataProvider = {
   },
   async hasUserVotedPoll(pollId, userId) {
     return delay(pollVoters.has(`${pollId}:${userId}`));
+  },
+
+  async getPlayerCareerData(clubId, playerId) {
+    return delay(PLAYER_CAREER_DATA[playerId] || { transfers: [], injuries: [], awards: [] });
+  },
+  async getCoachCareer(clubId) {
+    return delay(COACH_CAREER_DATA[clubId] || []);
+  },
+
+  async getFollowedTeams(userId) {
+    return delay(Array.from(followedTeamsByUser.get(userId) || []));
+  },
+  async toggleFollowedTeam(userId, teamName) {
+    const set = followedTeamsByUser.get(userId) || new Set<string>();
+    const wasFollowing = set.has(teamName);
+    if (wasFollowing) set.delete(teamName);
+    else set.add(teamName);
+    followedTeamsByUser.set(userId, set);
+    await this.logActivity(userId, wasFollowing ? `ألغيت متابعة ${teamName}` : `تابعت ${teamName}`);
+  },
+  async getFollowedLeagues(userId) {
+    return delay(Array.from(followedLeaguesByUser.get(userId) || []));
+  },
+  async toggleFollowedLeague(userId, league) {
+    const set = followedLeaguesByUser.get(userId) || new Set<string>();
+    const wasFollowing = set.has(league);
+    if (wasFollowing) set.delete(league);
+    else set.add(league);
+    followedLeaguesByUser.set(userId, set);
+    await this.logActivity(userId, wasFollowing ? `ألغيت متابعة ${league}` : `تابعت ${league}`);
+  },
+  async getFavorites(userId) {
+    return delay(Array.from(favoritesByUser.get(userId) || []));
+  },
+  async toggleFavoriteArticle(userId, articleId) {
+    const set = favoritesByUser.get(userId) || new Set<string>();
+    const wasFavorite = set.has(articleId);
+    if (wasFavorite) set.delete(articleId);
+    else set.add(articleId);
+    favoritesByUser.set(userId, set);
+    await this.logActivity(userId, wasFavorite ? 'أزلت مقالاً من المفضلة' : 'أضفت مقالاً للمفضلة');
+  },
+  async getActivityLog(userId) {
+    return delay(activityByUser.get(userId) || []);
+  },
+  async logActivity(userId, text) {
+    const log = activityByUser.get(userId) || [];
+    log.unshift({ id: `act-${Date.now()}`, text, time: new Date().toISOString() });
+    activityByUser.set(userId, log.slice(0, 50));
+    return delay(undefined);
+  },
+  async getDreamSquad(userId) {
+    return delay(dreamSquadByUser.get(userId) || {});
+  },
+  async updateDreamSquad(userId, squad) {
+    dreamSquadByUser.set(userId, squad);
+    return delay(undefined);
   },
 };

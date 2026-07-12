@@ -6,17 +6,20 @@ import Link from 'next/link';
 import { Users, MapPin, Trophy, User, Activity, Check, Info } from 'lucide-react';
 import TeamLogo from '@/components/TeamLogo';
 import NewsCard from '@/components/NewsCard';
+import SquadSection from '@/components/SquadSection';
+import ClubMatchesSection from '@/components/ClubMatchesSection';
 import { useAuth } from '@/contexts/AuthContext';
 import { data } from '@/lib/data';
-import type { ClubProfile, Standing, Article, Player } from '@/types';
+import type { ClubProfile, Standing, Article, Match } from '@/types';
 
 export default function ClubDashboardPage() {
   const params = useParams<{ id: string }>();
   const { toggleFollow, followedTeams } = useAuth();
-  const [activeTab, setActiveTab] = useState<'HOME' | 'SQUAD' | 'TROPHIES' | 'HISTORY'>('HOME');
+  const [activeTab, setActiveTab] = useState<'HOME' | 'SQUAD' | 'MATCHES' | 'TROPHIES' | 'HISTORY'>('HOME');
   const [club, setClub] = useState<ClubProfile | null | undefined>(undefined);
   const [standings, setStandings] = useState<Standing[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
   const [simulatedFanCount, setSimulatedFanCount] = useState(0);
 
   const clubId = params?.id?.toLowerCase();
@@ -26,6 +29,7 @@ export default function ClubDashboardPage() {
     data.getClubById(clubId).then(setClub);
     data.getStandings().then(setStandings);
     data.getArticles().then(setArticles);
+    data.getMatches().then(setMatches);
   }, [clubId]);
 
   useEffect(() => {
@@ -152,14 +156,14 @@ export default function ClubDashboardPage() {
 
           <div className="lg:col-span-9">
             <div className="flex border-b border-[var(--border-subtle)] mb-6 overflow-x-auto no-scrollbar">
-              {(['HOME', 'SQUAD', 'TROPHIES', 'HISTORY'] as const).map((tab) => (
+              {(['HOME', 'SQUAD', 'MATCHES', 'TROPHIES', 'HISTORY'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className="px-6 py-4 font-bold text-sm transition-all border-b-2 whitespace-nowrap"
                   style={{ color: activeTab === tab ? '#fff' : '#64748b', borderColor: activeTab === tab ? primaryColor : 'transparent' }}
                 >
-                  {tab === 'HOME' ? 'الرئيسية' : tab === 'SQUAD' ? 'قائمة اللاعبين' : tab === 'TROPHIES' ? 'خزينة البطولات' : 'تاريخ النادي'}
+                  {tab === 'HOME' ? 'الرئيسية' : tab === 'SQUAD' ? 'قائمة اللاعبين' : tab === 'MATCHES' ? 'المباريات' : tab === 'TROPHIES' ? 'خزينة البطولات' : 'تاريخ النادي'}
                 </button>
               ))}
             </div>
@@ -176,19 +180,9 @@ export default function ClubDashboardPage() {
                   <div className="text-center py-20 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)] border-dashed text-[var(--fg-faint)]">لا توجد أخبار حديثة.</div>
                 ))}
 
-              {activeTab === 'SQUAD' && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {club.squad && club.squad.length > 0 ? (
-                    club.squad.map((player, idx) => (
-                      <Link href={`/player/${club.id}/${player.id}`} key={idx}>
-                        <PlayerCard player={player} primaryColor={primaryColor} clubLogo={club.logo} />
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="col-span-full text-center py-10 text-[var(--fg-faint)]">قائمة اللاعبين غير متوفرة حالياً</div>
-                  )}
-                </div>
-              )}
+              {activeTab === 'SQUAD' && <SquadSection clubId={club.id} squad={club.squad || []} />}
+
+              {activeTab === 'MATCHES' && <ClubMatchesSection clubName={club.name} matches={matches} />}
 
               {activeTab === 'TROPHIES' && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -212,6 +206,12 @@ export default function ClubDashboardPage() {
                     </div>
                   </div>
 
+                  {club.history && (
+                    <div className="mb-8 pb-8 border-b border-[var(--border-subtle)]">
+                      <p className="text-[var(--fg-muted)] leading-loose whitespace-pre-line">{club.history}</p>
+                    </div>
+                  )}
+
                   <div className="space-y-6">
                     <div className="flex gap-4">
                       <div className="w-2 h-2 rounded-full mt-2 flex-shrink-0" style={{ backgroundColor: primaryColor }} />
@@ -232,7 +232,7 @@ export default function ClubDashboardPage() {
                   </div>
 
                   <p className="text-[11px] text-amber-500/80 border-t border-[var(--border-subtle)] mt-6 pt-4">
-                    ⚠️ سجل مفصّل موسمًا بموسم سيُضاف عند ربط مزود بيانات تاريخي حقيقي.
+                    ⚠️ الخط الزمني بالأسفل مبني تلقائيًا من عدد البطولات. لإضافة محطات تاريخية أخرى، أضفها للنص أعلاه من لوحة الإدارة.
                   </p>
                 </div>
               )}
@@ -240,81 +240,6 @@ export default function ClubDashboardPage() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function PlayerCard({ player, clubLogo }: { player: Player; primaryColor: string; clubLogo: string }) {
-  let cardBg = 'bg-[var(--bg-surface-2)]';
-  let textColor = 'text-[var(--fg-muted)]';
-  let accentColor = 'text-[var(--fg-subtle)]';
-  let borderColor = 'border-[var(--border)]';
-  let overlayGradient = 'from-slate-900/50 to-transparent';
-
-  if (player.rating >= 85) {
-    cardBg = 'bg-gradient-to-br from-[#46390b] via-[#856c1e] to-[#2a2206]';
-    textColor = 'text-[#fde047]';
-    accentColor = 'text-[#fef08a]';
-    borderColor = 'border-[#a16207]';
-    overlayGradient = 'from-[#2a2206]/80 to-transparent';
-  } else if (player.rating >= 80) {
-    cardBg = 'bg-gradient-to-br from-slate-600 via-slate-500 to-slate-800';
-    textColor = 'text-[var(--fg)]';
-    accentColor = 'text-[var(--fg-muted)]';
-    borderColor = 'border-slate-400';
-  }
-
-  return (
-    <div className={`relative w-full aspect-[2/3] rounded-t-3xl rounded-b-2xl overflow-hidden border ${borderColor} ${cardBg} shadow-2xl hover:-translate-y-2 transition-transform duration-300 group`}>
-      <div className="absolute top-0 left-0 w-full h-2/3 z-10">
-        <div className="absolute top-6 left-5 flex flex-col items-center gap-1 z-30 w-12">
-          <span className={`text-3xl font-black leading-none ${textColor}`}>{player.rating}</span>
-          <span className={`text-xs font-bold uppercase tracking-wider ${textColor}`}>{player.position}</span>
-          <div className="w-8 h-[1px] bg-white/30 my-1" />
-          {player.nationality && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={player.nationality} alt="Nation" className="w-8 h-5 object-cover rounded shadow-sm mb-1" />
-          )}
-          {clubLogo && (
-            <div className="w-8 h-8 flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={clubLogo} alt="Club" className="w-full h-full object-contain drop-shadow-md" />
-            </div>
-          )}
-        </div>
-        <div className="absolute bottom-0 right-[-10px] w-4/5 h-full z-20 flex items-end justify-end">
-          {player.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={player.image} alt={player.name} className="w-full h-auto object-contain drop-shadow-2xl filter contrast-110 transform group-hover:scale-105 transition-transform duration-500" />
-          ) : (
-            <User size={120} className="text-white/20" />
-          )}
-        </div>
-      </div>
-      <div className="absolute bottom-0 left-0 w-full h-1/2 z-20 flex flex-col justify-end pb-3 px-3">
-        <div className={`absolute bottom-0 left-0 w-full h-full bg-gradient-to-t ${overlayGradient} z-0`} />
-        <div className="relative z-10 text-center">
-          <h3 className={`font-black text-lg uppercase tracking-wide truncate px-2 mb-2 ${textColor}`}>{player.name}</h3>
-          <div className="w-4/5 h-[1px] bg-white/20 mb-2 mx-auto" />
-          <div className="grid grid-cols-6 gap-x-1 gap-y-1 text-center px-1">
-            <StatItem label="PAC" value={player.stats?.pac} color={accentColor} />
-            <StatItem label="SHO" value={player.stats?.sho} color={accentColor} />
-            <StatItem label="PAS" value={player.stats?.pas} color={accentColor} />
-            <StatItem label="DRI" value={player.stats?.dri} color={accentColor} />
-            <StatItem label="DEF" value={player.stats?.def} color={accentColor} />
-            <StatItem label="PHY" value={player.stats?.phy} color={accentColor} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatItem({ label, value, color }: { label: string; value?: number; color: string }) {
-  return (
-    <div className="flex flex-col items-center">
-      <span className={`text-[9px] ${color} opacity-70 font-bold tracking-widest`}>{label}</span>
-      <span className={`text-sm font-bold ${color}`}>{value || '-'}</span>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '@/lib/auth';
+import { data } from '@/lib/data';
 import type { AuthUser } from '@/lib/auth/provider';
 
 interface AuthContextValue {
@@ -11,8 +12,6 @@ interface AuthContextValue {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (name: string, username: string, email: string, password: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  // TEMP: client-only state, not persisted anywhere yet. Will move to a
-  // real "follows" table (Appwrite) in the final phase.
   followedTeams: string[];
   toggleFollow: (teamName: string) => void;
   followedLeagues: string[];
@@ -36,14 +35,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [activityLog, setActivityLog] = useState<{ id: string; text: string; time: string }[]>([]);
   const [dreamSquad, setDreamSquad] = useState<Record<number, any>>({});
 
-  function logActivity(text: string) {
-    setActivityLog((prev) => [{ id: `act-${Date.now()}`, text, time: new Date().toISOString() }, ...prev].slice(0, 50));
-  }
-
+  // All preference data now lives in Postgres (see supabase/schema.sql).
+  // Whenever the logged-in user changes, load their saved state; on
+  // logout, clear it from memory.
   useEffect(() => {
-    const unsubscribe = auth.onChange((user) => {
+    const unsubscribe = auth.onChange(async (user) => {
       setCurrentUser(user);
       setLoading(false);
+
+      if (user) {
+        const [teams, leagues, favs, activity, squad] = await Promise.all([
+          data.getFollowedTeams(user.id),
+          data.getFollowedLeagues(user.id),
+          data.getFavorites(user.id),
+          data.getActivityLog(user.id),
+          data.getDreamSquad(user.id),
+        ]);
+        setFollowedTeams(teams);
+        setFollowedLeagues(leagues);
+        setFavorites(favs);
+        setActivityLog(activity);
+        setDreamSquad(squad);
+      } else {
+        setFollowedTeams([]);
+        setFollowedLeagues([]);
+        setFavorites([]);
+        setActivityLog([]);
+        setDreamSquad({});
+      }
     });
     return unsubscribe;
   }, []);
@@ -61,33 +80,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error };
     },
     signOut: () => auth.signOut(),
+
     followedTeams,
     toggleFollow: (teamName: string) => {
-      setFollowedTeams((prev) => {
-        const isFollowing = prev.includes(teamName);
-        logActivity(isFollowing ? `ألغيت متابعة ${teamName}` : `تابعت ${teamName}`);
-        return isFollowing ? prev.filter((t) => t !== teamName) : [...prev, teamName];
-      });
+      if (!currentUser) return;
+      const isFollowing = followedTeams.includes(teamName);
+      setFollowedTeams((prev) => (isFollowing ? prev.filter((t) => t !== teamName) : [...prev, teamName]));
+      data.toggleFollowedTeam(currentUser.id, teamName).then(() => data.getActivityLog(currentUser.id).then(setActivityLog));
     },
+
     followedLeagues,
     toggleFollowLeague: (league: string) => {
-      setFollowedLeagues((prev) => {
-        const isFollowing = prev.includes(league);
-        logActivity(isFollowing ? `ألغيت متابعة ${league}` : `تابعت ${league}`);
-        return isFollowing ? prev.filter((l) => l !== league) : [...prev, league];
-      });
+      if (!currentUser) return;
+      const isFollowing = followedLeagues.includes(league);
+      setFollowedLeagues((prev) => (isFollowing ? prev.filter((l) => l !== league) : [...prev, league]));
+      data.toggleFollowedLeague(currentUser.id, league).then(() => data.getActivityLog(currentUser.id).then(setActivityLog));
     },
+
     favorites,
     toggleFavorite: (articleId: string) => {
-      setFavorites((prev) => {
-        const isFav = prev.includes(articleId);
-        logActivity(isFav ? 'أزلت مقالاً من المفضلة' : 'أضفت مقالاً للمفضلة');
-        return isFav ? prev.filter((a) => a !== articleId) : [...prev, articleId];
-      });
+      if (!currentUser) return;
+      const isFav = favorites.includes(articleId);
+      setFavorites((prev) => (isFav ? prev.filter((a) => a !== articleId) : [...prev, articleId]));
+      data.toggleFavoriteArticle(currentUser.id, articleId).then(() => data.getActivityLog(currentUser.id).then(setActivityLog));
     },
+
     activityLog,
+
     dreamSquad,
-    updateDreamSquad: (squad: Record<number, any>) => setDreamSquad(squad),
+    updateDreamSquad: (squad: Record<number, any>) => {
+      setDreamSquad(squad);
+      if (currentUser) data.updateDreamSquad(currentUser.id, squad);
+    },
+
     profileLoading: loading,
   };
 
