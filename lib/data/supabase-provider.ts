@@ -149,7 +149,10 @@ export const supabaseProvider: DataProvider = {
   async getArticles() {
     const supabase = await getClient();
     const { data, error } = await supabase.from('articles').select('*').order('date', { ascending: false });
-    if (error) throw error;
+    if (error) {
+      console.error('getArticles failed:', error.message);
+      return [];
+    }
     return (data ?? []).map(mapArticle);
   },
   async getArticleById(id) {
