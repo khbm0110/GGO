@@ -8,6 +8,11 @@ import PollWidget from '@/components/PollWidget';
 import { Category } from '@/types';
 import { isSameCalendarDay } from '@/lib/services/dateService';
 
+// This page reads live data (scores, standings, leaderboard...) that
+// changes constantly, so it must be rendered fresh on every request
+// rather than cached as a static page at build time.
+export const dynamic = 'force-dynamic';
+
 function SectionHeader({ title, link }: { title: string; link?: string }) {
   return (
     <div className="flex items-center justify-between mb-4 border-r-4 border-primary pr-3 bg-gradient-to-l from-slate-900 to-transparent p-2 rounded-r">

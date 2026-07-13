@@ -1,10 +1,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import type { CookieOptions } from '@supabase/ssr';
 
-// Use inside Server Components, Server Actions, and Route Handlers.
-// Reads the user's session from cookies, so RLS policies apply based on
-// the real logged-in user — never bypassed from the server side.
+// Cookie-aware server client — reads the real logged-in user's session
+// from request cookies, so RLS applies correctly.
+//
+// ⚠️ ONLY import this file from Route Handlers (app/api/**/route.ts) or
+// Server Actions — NEVER from lib/data/supabase-provider.ts or any other
+// module that Client Components also import. Because this file imports
+// next/headers, doing so breaks the production build for every client
+// component that transitively reaches it (even through a dynamic
+// import()) — Next.js flags this at build time. See lib/supabase/public.ts
+// and lib/supabase/admin.ts for the next/headers-free alternatives used
+// by the shared data provider.
 export async function createClient() {
   const cookieStore = await cookies();
 
@@ -16,7 +24,7 @@ export async function createClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
@@ -28,20 +36,5 @@ export async function createClient() {
         },
       },
     }
-  );
-}
-
-// Admin client — SERVICE ROLE KEY, bypasses RLS. Only import this in
-// server-only code (route handlers / admin dashboard actions) that
-// explicitly needs elevated access (e.g. banning a user). NEVER import
-// this in a file that could end up in a client bundle.
-export function createAdminClient() {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set.');
-  }
-  return createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }

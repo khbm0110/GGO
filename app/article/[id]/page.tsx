@@ -5,6 +5,11 @@ import { formatTimeAgo } from '@/lib/services/dateService';
 import ArticleComments from '@/components/ArticleComments';
 import FavoriteButton from '@/components/FavoriteButton';
 
+// This page reads live data (scores, standings, leaderboard...) that
+// changes constantly, so it must be rendered fresh on every request
+// rather than cached as a static page at build time.
+export const dynamic = 'force-dynamic';
+
 export default async function ArticleDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const article = await data.getArticleById(id);

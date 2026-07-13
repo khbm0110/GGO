@@ -118,6 +118,11 @@ create table public.players (
   name text not null,
   english_name text,
   age integer,
+  birth_date date,
+  birth_place text,
+  height_cm integer,
+  weight_kg integer,
+  preferred_foot text check (preferred_foot in ('LEFT', 'RIGHT', 'BOTH')),
   number integer,
   position text,
   rating integer,
@@ -125,7 +130,7 @@ create table public.players (
   image text,
   market_value bigint,
   stats jsonb,        -- { pac, sho, pas, dri, def, phy }
-  season_stats jsonb, -- { matches, goals, assists, rating }
+  season_stats jsonb, -- { matches, goals, assists, rating, minutes, yellowCards, redCards, shots, shotsOnTarget, passAccuracy, cleanSheets, saves, tackles }
   primary key (club_id, id)
 );
 

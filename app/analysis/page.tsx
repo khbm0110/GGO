@@ -3,6 +3,11 @@ import { data } from '@/lib/data';
 import NewsCard from '@/components/NewsCard';
 import { Category } from '@/types';
 
+// This page reads live data (scores, standings, leaderboard...) that
+// changes constantly, so it must be rendered fresh on every request
+// rather than cached as a static page at build time.
+export const dynamic = 'force-dynamic';
+
 export default async function AnalysisPage() {
   const articles = await data.getArticles();
   const filtered = articles.filter((a) => a.category === Category.ANALYSIS);

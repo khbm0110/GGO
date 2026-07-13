@@ -3,6 +3,11 @@ import { PlayCircle, Clock } from 'lucide-react';
 import { data } from '@/lib/data';
 import { Category } from '@/types';
 
+// This page reads live data (scores, standings, leaderboard...) that
+// changes constantly, so it must be rendered fresh on every request
+// rather than cached as a static page at build time.
+export const dynamic = 'force-dynamic';
+
 export default async function VideosPage() {
   const articles = await data.getArticles();
   const videos = articles.filter((a) => a.category === Category.VIDEO);

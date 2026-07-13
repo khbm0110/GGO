@@ -1,17 +1,24 @@
 import { createClient } from '@/lib/supabase/client';
-import { createClient as createServerSupabase, createAdminClient } from '@/lib/supabase/server';
+import { createPublicClient } from '@/lib/supabase/public';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { DataProvider } from './provider';
 import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, Player, MatchDetails } from '@/types';
 import type { Prediction, LeaderboardEntry, Poll, TransferRecord, InjuryRecord, AwardRecord, CoachCareerEntry } from '@/types/community';
 
-// Runs in both server and client contexts. On the server (Server
-// Components, Route Handlers) we use the cookie-aware server client so
-// RLS applies to the real logged-in user. In the browser we use the
-// anon-key browser client. Both go through Postgres RLS — nothing here
-// bypasses it except the explicit admin actions marked below.
+// Runs in both server and client contexts. Server Components in this
+// app only ever do PUBLIC reads (articles, matches, clubs, standings —
+// all "using (true)" in RLS), so they use the plain anon client with no
+// session/cookie handling at all. Client Components use the browser
+// client, which has the real logged-in user's session, so RLS applies
+// correctly for personal data (predictions, favorites, comments...).
+//
+// Deliberately does NOT import lib/supabase/server.ts here (or anywhere
+// in this file) — that file imports next/headers, which breaks the
+// production build for every Client Component that transitively
+// imports this provider (which is nearly all of them, via lib/data).
 async function getClient() {
   if (typeof window === 'undefined') {
-    return createServerSupabase();
+    return createPublicClient();
   }
   return createClient();
 }
@@ -74,6 +81,11 @@ function mapPlayer(row: any): Player {
     name: row.name,
     englishName: row.english_name,
     age: row.age,
+    birthDate: row.birth_date,
+    birthPlace: row.birth_place,
+    heightCm: row.height_cm,
+    weightKg: row.weight_kg,
+    preferredFoot: row.preferred_foot,
     number: row.number,
     position: row.position,
     rating: row.rating,

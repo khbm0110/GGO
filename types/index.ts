@@ -150,6 +150,15 @@ export interface PlayerSeasonStats {
     goals: number;
     assists: number;
     rating: number; // Average rating
+    minutes?: number;
+    yellowCards?: number;
+    redCards?: number;
+    shots?: number;
+    shotsOnTarget?: number;
+    passAccuracy?: number; // percentage
+    cleanSheets?: number;  // for goalkeepers
+    saves?: number;        // for goalkeepers
+    tackles?: number;      // for defenders
 }
 
 export interface Player {
@@ -158,6 +167,11 @@ export interface Player {
   name: string;
   englishName?: string;
   age?: number;
+  birthDate?: string;   // ISO date
+  birthPlace?: string;
+  heightCm?: number;
+  weightKg?: number;
+  preferredFoot?: 'LEFT' | 'RIGHT' | 'BOTH';
   number: number;
   position: 'GK' | 'DEF' | 'MID' | 'FWD' | 'ST' | 'CB' | 'CM' | 'CDM' | 'CAM' | 'RW' | 'LW' | 'LB' | 'RB' | 'RM' | 'LM';
   rating: number;

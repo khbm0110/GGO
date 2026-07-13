@@ -4,6 +4,11 @@ import NewsCard from '@/components/NewsCard';
 import FollowLeagueButton from '@/components/FollowLeagueButton';
 import { Category } from '@/types';
 
+// This page reads live data (scores, standings, leaderboard...) that
+// changes constantly, so it must be rendered fresh on every request
+// rather than cached as a static page at build time.
+export const dynamic = 'force-dynamic';
+
 const CATEGORY_MAP: Record<string, Category> = {
   saudi: Category.SAUDI,
   uae: Category.UAE,

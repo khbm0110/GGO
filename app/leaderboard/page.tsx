@@ -1,6 +1,11 @@
 import { Trophy, Medal } from 'lucide-react';
 import { data } from '@/lib/data';
 
+// This page reads live data (scores, standings, leaderboard...) that
+// changes constantly, so it must be rendered fresh on every request
+// rather than cached as a static page at build time.
+export const dynamic = 'force-dynamic';
+
 export default async function LeaderboardPage() {
   const leaderboard = await data.getLeaderboard();
 

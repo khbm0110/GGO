@@ -5,20 +5,29 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { User, ArrowRight, TrendingUp, Award, Repeat, HeartPulse } from 'lucide-react';
 import TeamLogo from '@/components/TeamLogo';
+import NewsCard from '@/components/NewsCard';
 import { data } from '@/lib/data';
-import type { Player, ClubProfile } from '@/types';
+import type { Player, ClubProfile, Article } from '@/types';
 import type { TransferRecord, InjuryRecord, AwardRecord } from '@/types/community';
 
 export default function PlayerDetailPage() {
   const params = useParams<{ clubId: string; playerId: string }>();
   const [result, setResult] = useState<{ player: Player; club: ClubProfile } | null | undefined>(undefined);
   const [career, setCareer] = useState<{ transfers: TransferRecord[]; injuries: InjuryRecord[]; awards: AwardRecord[] } | null>(null);
+  const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
 
   useEffect(() => {
     if (!params?.clubId || !params?.playerId) return;
     data.getPlayerById(params.clubId, params.playerId).then(setResult);
     data.getPlayerCareerData(params.clubId, params.playerId).then(setCareer);
   }, [params?.clubId, params?.playerId]);
+
+  useEffect(() => {
+    if (!result) return;
+    data.getArticles().then((articles) => {
+      setRelatedArticles(articles.filter((a) => a.title.includes(result.player.name)));
+    });
+  }, [result]);
 
   if (result === undefined) {
     return <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center text-[var(--fg-faint)]">جارٍ التحميل...</div>;
@@ -74,6 +83,45 @@ export default function PlayerDetailPage() {
 
         <div className="md:col-span-2 space-y-6">
           <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6">
+            <h3 className="font-bold text-[var(--fg)] mb-4 text-lg border-b border-[var(--border-subtle)] pb-2">البيانات الشخصية</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+              {player.birthDate && (
+                <div>
+                  <span className="block text-[var(--fg-faint)] text-xs mb-1">تاريخ الميلاد</span>
+                  <span className="text-[var(--fg)] font-bold">{new Date(player.birthDate).toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                </div>
+              )}
+              {player.birthPlace && (
+                <div>
+                  <span className="block text-[var(--fg-faint)] text-xs mb-1">مكان الميلاد</span>
+                  <span className="text-[var(--fg)] font-bold">{player.birthPlace}</span>
+                </div>
+              )}
+              {player.heightCm && (
+                <div>
+                  <span className="block text-[var(--fg-faint)] text-xs mb-1">الطول</span>
+                  <span className="text-[var(--fg)] font-bold">{player.heightCm} سم</span>
+                </div>
+              )}
+              {player.weightKg && (
+                <div>
+                  <span className="block text-[var(--fg-faint)] text-xs mb-1">الوزن</span>
+                  <span className="text-[var(--fg)] font-bold">{player.weightKg} كجم</span>
+                </div>
+              )}
+              {player.preferredFoot && (
+                <div>
+                  <span className="block text-[var(--fg-faint)] text-xs mb-1">القدم المفضلة</span>
+                  <span className="text-[var(--fg)] font-bold">{player.preferredFoot === 'RIGHT' ? 'اليمنى' : player.preferredFoot === 'LEFT' ? 'اليسرى' : 'كلتاهما'}</span>
+                </div>
+              )}
+            </div>
+            {!player.birthDate && !player.birthPlace && !player.heightCm && !player.weightKg && !player.preferredFoot && (
+              <p className="text-[var(--fg-faint)] text-sm text-center py-2">لا تتوفر بيانات شخصية إضافية حاليًا.</p>
+            )}
+          </div>
+
+          <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6">
             <h3 className="font-bold text-[var(--fg)] mb-4 text-lg border-b border-[var(--border-subtle)] pb-2 flex items-center gap-2">
               <TrendingUp size={18} className="text-primary" /> الإحصائيات الفنية
             </h3>
@@ -95,6 +143,15 @@ export default function PlayerDetailPage() {
                 <Stat label="الأهداف" value={player.seasonStats.goals} />
                 <Stat label="التمريرات الحاسمة" value={player.seasonStats.assists} />
                 <Stat label="متوسط التقييم" value={player.seasonStats.rating} />
+                {player.seasonStats.minutes !== undefined && <Stat label="دقائق اللعب" value={player.seasonStats.minutes} />}
+                {player.seasonStats.yellowCards !== undefined && <Stat label="بطاقات صفراء" value={player.seasonStats.yellowCards} />}
+                {player.seasonStats.redCards !== undefined && <Stat label="بطاقات حمراء" value={player.seasonStats.redCards} />}
+                {player.seasonStats.shots !== undefined && <Stat label="التسديدات" value={player.seasonStats.shots} />}
+                {player.seasonStats.shotsOnTarget !== undefined && <Stat label="على المرمى" value={player.seasonStats.shotsOnTarget} />}
+                {player.seasonStats.passAccuracy !== undefined && <Stat label="دقة التمرير %" value={player.seasonStats.passAccuracy} />}
+                {player.seasonStats.cleanSheets !== undefined && <Stat label="نظافة الشباك" value={player.seasonStats.cleanSheets} />}
+                {player.seasonStats.saves !== undefined && <Stat label="التصديات" value={player.seasonStats.saves} />}
+                {player.seasonStats.tackles !== undefined && <Stat label="الالتقاطات" value={player.seasonStats.tackles} />}
               </div>
             </div>
           )}
@@ -136,6 +193,17 @@ export default function PlayerDetailPage() {
               ))}
             </CareerSection>
           </div>
+
+          {relatedArticles.length > 0 && (
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6">
+              <h3 className="font-bold text-[var(--fg)] mb-4 text-lg border-b border-[var(--border-subtle)] pb-2">أخبار متعلقة</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {relatedArticles.map((article) => (
+                  <NewsCard key={article.id} article={article} compact />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
