@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   Shield, Plus, Edit, Trash2, LayoutGrid, FileText, Users, Settings, Check, Ban,
-  MessageCircle, Clock, ShoppingBag, Globe, Megaphone, BarChart2, Bot, Save,
+  MessageCircle, Clock, ShoppingBag, Globe, Megaphone, BarChart2, Bot, Save, LogOut,
+  Home,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { data } from '@/lib/data';
@@ -20,9 +22,14 @@ const COMING_SOON_TABS: { key: AdminTab; label: string; icon: typeof ShoppingBag
 ];
 
 export default function AdminDashboardPage() {
-  const { currentUser, isAdmin, loading } = useAuth();
+  const { currentUser, isAdmin, loading, signOut } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<AdminTab>('OVERVIEW');
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/');
+  };
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -152,49 +159,140 @@ export default function AdminDashboardPage() {
     refreshAll();
   }
 
-  const NAV_ITEMS: { key: AdminTab; label: string; icon: typeof LayoutGrid }[] = [
-    { key: 'OVERVIEW', label: 'نظرة عامة', icon: LayoutGrid },
-    { key: 'ARTICLES', label: 'المقالات', icon: FileText },
-    { key: 'CLUBS', label: 'الأندية', icon: ShoppingBag },
-    { key: 'USERS', label: 'المستخدمون', icon: Users },
-    { key: 'MODERATION', label: 'مراقبة التعليقات', icon: MessageCircle },
-    { key: 'SPONSORS', label: 'الرعاة والإعلانات', icon: Megaphone },
-    { key: 'SEO', label: 'SEO', icon: Globe },
-    { key: 'SETTINGS', label: 'الإعدادات العامة', icon: Settings },
-    ...COMING_SOON_TABS,
+  const NAV_GROUPS: { group: string; items: { key: AdminTab; label: string; icon: typeof LayoutGrid }[] }[] = [
+    { group: 'عام', items: [{ key: 'OVERVIEW', label: 'نظرة عامة', icon: LayoutGrid }] },
+    {
+      group: 'المحتوى',
+      items: [
+        { key: 'ARTICLES', label: 'المقالات', icon: FileText },
+        { key: 'CLUBS', label: 'الأندية', icon: ShoppingBag },
+      ],
+    },
+    {
+      group: 'المجتمع',
+      items: [
+        { key: 'USERS', label: 'المستخدمون', icon: Users },
+        { key: 'MODERATION', label: 'مراقبة التعليقات', icon: MessageCircle },
+      ],
+    },
+    {
+      group: 'الموقع',
+      items: [
+        { key: 'SPONSORS', label: 'الرعاة والإعلانات', icon: Megaphone },
+        { key: 'SEO', label: 'SEO', icon: Globe },
+        { key: 'SETTINGS', label: 'الإعدادات العامة', icon: Settings },
+        ...COMING_SOON_TABS,
+      ],
+    },
   ];
+
+  const activeTabMeta = NAV_GROUPS.flatMap((g) => g.items).find((i) => i.key === activeTab);
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)] flex flex-col lg:flex-row">
-      <aside className="lg:w-64 bg-[var(--bg-surface)] border-b lg:border-b-0 lg:border-l border-[var(--border-subtle)] p-4 flex-shrink-0">
-        <div className="flex items-center gap-2 mb-6 px-2">
+      <aside className="lg:w-64 lg:h-screen lg:sticky lg:top-0 bg-[var(--bg-surface)] border-b lg:border-b-0 lg:border-l border-[var(--border-subtle)] flex-shrink-0 flex flex-col">
+        <div className="flex items-center gap-2 p-4 border-b border-[var(--border-subtle)]">
           <Shield className="text-red-500" size={24} />
           <span className="font-black text-[var(--fg)] text-lg">لوحة التحكم</span>
         </div>
-        <nav className="flex lg:flex-col gap-1 overflow-x-auto no-scrollbar">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => setActiveTab(item.key)}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${
-                activeTab === item.key ? 'bg-primary/10 text-primary' : 'text-[var(--fg-subtle)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--fg)]'
-              }`}
-            >
-              <item.icon size={16} /> {item.label}
-            </button>
-          ))}
+
+        <nav className="flex-1 lg:overflow-y-auto p-3">
+          <div className="flex lg:hidden gap-1 overflow-x-auto no-scrollbar">
+            {NAV_GROUPS.flatMap((g) => g.items).map((item) => (
+              <button
+                key={item.key}
+                onClick={() => setActiveTab(item.key)}
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${
+                  activeTab === item.key ? 'bg-primary/10 text-primary' : 'text-[var(--fg-subtle)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--fg)]'
+                }`}
+              >
+                <item.icon size={16} /> {item.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="hidden lg:block space-y-5">
+            {NAV_GROUPS.map((group) => (
+              <div key={group.group}>
+                <p className="px-3 mb-1.5 text-[10px] font-black uppercase tracking-widest text-[var(--fg-faint)]">{group.group}</p>
+                <div className="flex flex-col gap-1">
+                  {group.items.map((item) => (
+                    <button
+                      key={item.key}
+                      onClick={() => setActiveTab(item.key)}
+                      className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-colors ${
+                        activeTab === item.key ? 'bg-primary/10 text-primary' : 'text-[var(--fg-subtle)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--fg)]'
+                      }`}
+                    >
+                      <item.icon size={16} /> {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </nav>
+
+        <div className="border-t border-[var(--border-subtle)] p-3 space-y-1">
+          <Link href="/" className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold text-[var(--fg-subtle)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--fg)] transition-colors">
+            <Home size={16} /> العودة للموقع
+          </Link>
+          <div className="flex items-center justify-between gap-2 px-1">
+            <div className="flex items-center gap-2 min-w-0 px-2 py-2">
+              <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--bg-surface-2)] flex items-center justify-center flex-shrink-0">
+                {currentUser?.avatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={currentUser.avatar} alt={currentUser.username} className="w-full h-full object-cover" />
+                ) : (
+                  <Shield size={14} className="text-[var(--fg-faint)]" />
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[var(--fg)] truncate">{currentUser?.name}</p>
+                <p className="text-[10px] text-[var(--fg-faint)] truncate">مدير الموقع</p>
+              </div>
+            </div>
+            <button onClick={handleLogout} title="تسجيل الخروج" className="flex-shrink-0 p-2 rounded-lg text-[var(--fg-faint)] hover:bg-red-500/10 hover:text-red-500 transition-colors">
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
       </aside>
 
-      <main className="flex-1 p-4 md:p-8">
+      <main className="flex-1 p-4 md:p-8 min-w-0">
+        {activeTab !== 'OVERVIEW' && activeTabMeta && (
+          <p className="text-xs font-bold text-[var(--fg-faint)] mb-1">لوحة التحكم / {activeTabMeta.label}</p>
+        )}
+
         {activeTab === 'OVERVIEW' && (
           <div>
-            <h1 className="text-2xl font-black text-[var(--fg)] mb-6">نظرة عامة</h1>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <h1 className="text-2xl font-black text-[var(--fg)] mb-1">نظرة عامة</h1>
+            <p className="text-sm text-[var(--fg-faint)] mb-6">مرحبًا {currentUser?.name}، هذا ملخص سريع لحالة الموقع.</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <StatCard label="المقالات" value={articles.length} icon={FileText} />
               <StatCard label="المستخدمون" value={users.length} icon={Users} />
+              <StatCard label="الأندية" value={clubs.length} icon={ShoppingBag} />
+              <StatCard label="الرعاة" value={sponsors.length} icon={Megaphone} />
               <StatCard label="التعليقات" value={comments.length} icon={MessageCircle} />
               <StatCard label="مقالات عاجلة" value={articles.filter((a) => a.isBreaking).length} icon={Clock} />
+              <StatCard label="تعليقات مُبلَّغ عنها" value={comments.filter((c) => c.status === 'reported').length} icon={MessageCircle} />
+              <StatCard label="مستخدمون محظورون" value={users.filter((u) => u.status === 'banned').length} icon={Ban} />
+            </div>
+
+            <h2 className="text-sm font-black text-[var(--fg-subtle)] mb-3">اختصارات سريعة</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <button onClick={() => { setEditorMode('NEW'); setEditingArticle({ id: 'new-article', title: '', summary: '', content: '', category: Category.SAUDI, imageUrl: '' }); }} className="flex items-center gap-2 p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl hover:border-primary/50 transition-colors text-sm font-bold text-[var(--fg-muted)] hover:text-primary">
+                <Plus size={16} /> مقال جديد
+              </button>
+              <button onClick={() => setActiveTab('MODERATION')} className="flex items-center gap-2 p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl hover:border-primary/50 transition-colors text-sm font-bold text-[var(--fg-muted)] hover:text-primary">
+                <MessageCircle size={16} /> مراقبة التعليقات
+              </button>
+              <button onClick={() => setActiveTab('USERS')} className="flex items-center gap-2 p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl hover:border-primary/50 transition-colors text-sm font-bold text-[var(--fg-muted)] hover:text-primary">
+                <Users size={16} /> إدارة المستخدمين
+              </button>
+              <button onClick={() => setActiveTab('SETTINGS')} className="flex items-center gap-2 p-4 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl hover:border-primary/50 transition-colors text-sm font-bold text-[var(--fg-muted)] hover:text-primary">
+                <Settings size={16} /> إعدادات الموقع
+              </button>
             </div>
           </div>
         )}

@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X, Search, Trophy, Youtube, Calendar, User as UserIcon, LogIn, Shield, Sun, Moon } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Menu, X, Search, Trophy, Youtube, Calendar, User as UserIcon, LogIn, LogOut, Shield, Sun, Moon, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import SearchModal from './SearchModal';
@@ -25,14 +25,39 @@ const NAV_ITEMS = [
 export default function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
   const pathname = usePathname();
-  const { currentUser, isAdmin } = useAuth();
+  const router = useRouter();
+  const { currentUser, isAdmin, signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     data.getArticles().then(setArticles);
   }, []);
+
+  // Close the account dropdown on outside click, and whenever the route changes.
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+    setIsOpen(false);
+  }, [pathname]);
+
+  const handleLogout = async () => {
+    setIsUserMenuOpen(false);
+    await signOut();
+    router.push('/');
+  };
 
   return (
     <header className="bg-[var(--bg-surface)] border-b border-[var(--border-subtle)] sticky top-0 z-50 shadow-lg shadow-black/20">
@@ -114,18 +139,49 @@ export default function Header() {
             </button>
 
             {currentUser ? (
-              <Link
-                href={isAdmin ? '/admin' : '/profile'}
-                className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-3)] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors border border-[var(--border)] overflow-hidden"
-                title={isAdmin ? 'لوحة التحكم' : 'الملف الشخصي'}
-              >
-                {currentUser.avatar ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={currentUser.avatar} alt={currentUser.username} className="w-full h-full object-cover" />
-                ) : (
-                  <UserIcon size={16} />
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setIsUserMenuOpen((v) => !v)}
+                  className="flex items-center gap-1.5 pr-0.5 pl-1.5 py-0.5 rounded-full bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-3)] text-[var(--fg-muted)] hover:text-[var(--fg)] transition-colors border border-[var(--border)]"
+                  title={currentUser.name}
+                >
+                  <div className="w-7 h-7 rounded-full overflow-hidden bg-[var(--bg-surface-3)] flex items-center justify-center flex-shrink-0">
+                    {currentUser.avatar ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={currentUser.avatar} alt={currentUser.username} className="w-full h-full object-cover" />
+                    ) : (
+                      <UserIcon size={14} />
+                    )}
+                  </div>
+                  <ChevronDown size={14} className={`hidden sm:block transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isUserMenuOpen && (
+                  <div className="absolute left-0 mt-2 w-56 bg-[var(--bg-surface)] border border-[var(--border)] rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-1">
+                    <div className="p-3 border-b border-[var(--border-subtle)]">
+                      <p className="text-sm font-bold text-[var(--fg)] truncate">{currentUser.name}</p>
+                      <p className="text-xs text-[var(--fg-faint)] truncate">@{currentUser.username}</p>
+                    </div>
+                    <div className="p-1.5">
+                      <Link
+                        href={isAdmin ? '/admin' : '/profile'}
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold text-[var(--fg-muted)] hover:bg-[var(--bg-surface-2)] hover:text-[var(--fg)] transition-colors"
+                      >
+                        {isAdmin ? <Shield size={16} /> : <UserIcon size={16} />}
+                        {isAdmin ? 'لوحة التحكم' : 'الملف الشخصي'}
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-bold text-[var(--fg-muted)] hover:bg-red-500/10 hover:text-red-500 transition-colors"
+                      >
+                        <LogOut size={16} />
+                        تسجيل الخروج
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </Link>
+              </div>
             ) : (
               <Link
                 href="/login"
@@ -180,6 +236,11 @@ export default function Header() {
               <Link href="/clubs" onClick={() => setIsOpen(false)} className="block px-3 py-2 text-[var(--fg-muted)] hover:text-[var(--fg)]">الأندية</Link>
               <Link href="/topscorers" onClick={() => setIsOpen(false)} className="block px-3 py-2 text-[var(--fg-muted)] hover:text-[var(--fg)]">الهدافون</Link>
               <Link href="/compare" onClick={() => setIsOpen(false)} className="block px-3 py-2 text-[var(--fg-muted)] hover:text-[var(--fg)]">مقارنة الفرق</Link>
+              {currentUser && (
+                <button onClick={handleLogout} className="w-full text-right px-3 py-2 text-red-500 hover:text-red-400 font-bold flex items-center gap-2 border-t border-[var(--border-subtle)] mt-2 pt-3">
+                  <LogOut size={16} /> تسجيل الخروج
+                </button>
+              )}
             </div>
           </div>
         </div>
