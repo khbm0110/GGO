@@ -1,7 +1,5 @@
 /** @type {import('next').NextConfig} */
 const securityHeaders = [
-  // Prevents the site from being embedded in an iframe on another domain (clickjacking protection)
-  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   // Stops the browser from guessing MIME types
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   // Limits how much referrer info is leaked to other sites
@@ -14,17 +12,18 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: https: blob:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://v3.football.api-sports.io",
-      "frame-ancestors 'self'",
+      "frame-ancestors *",
     ].join('; '),
   },
 ];
 
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   poweredByHeader: false, // hides "X-Powered-By: Next.js" from responses
   images: {
