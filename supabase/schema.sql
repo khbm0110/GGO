@@ -67,8 +67,20 @@ create table public.matches (
   country text,
   date timestamptz,
   round text,
-  venue text
+  venue text,
+  -- Links this match to a live API-Football fixture. Nullable — only
+  -- populated for matches that came from (or were matched against) the
+  -- live API-Football feed. Used by the polling cron to know which
+  -- fixture to re-check, and which two teams' players to refresh the
+  -- moment the fixture status flips to FINISHED.
+  api_fixture_id integer,
+  home_team_api_id integer,
+  away_team_api_id integer
 );
+
+create index if not exists idx_matches_live_with_fixture
+  on public.matches (api_fixture_id)
+  where status = 'LIVE' and api_fixture_id is not null;
 
 create table public.match_details (
   match_id text primary key references public.matches(id) on delete cascade,
@@ -286,8 +298,44 @@ create table public.feature_flags (
   constraint single_row check (id = 1)
 );
 
+create table public.ad_slots (
+  id text primary key,
+  placement text not null,
+  label text not null,
+  network text not null default 'adsense',
+  code text not null default '',
+  enabled boolean not null default false,
+  pages text[] not null default array['all'],
+  start_date date,
+  end_date date,
+  updated_at timestamptz not null default now()
+);
+
+create table public.ads_global_settings (
+  id int primary key default 1,
+  master_enabled boolean not null default true,
+  ads_txt_content text not null default '',
+  constraint single_row check (id = 1)
+);
+
+-- Which API-Football leagues the automatic fixture importer pulls from.
+-- Admin-managed (searched + added from the API-Football /leagues
+-- endpoint) rather than hardcoded, since league ids AND the "current
+-- season" id both vary and shift every year.
+create table public.tracked_leagues (
+  id text primary key, -- 'af-{league_api_id}-{season}'
+  league_api_id integer not null,
+  season integer not null,
+  name text not null,
+  country text,
+  logo text,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
 insert into public.seo_settings (id) values (1);
 insert into public.feature_flags (id) values (1);
+insert into public.ads_global_settings (id) values (1);
 
 -- ============================================================================
 -- ROW LEVEL SECURITY
@@ -318,6 +366,9 @@ alter table public.poll_votes enable row level security;
 alter table public.sponsors enable row level security;
 alter table public.seo_settings enable row level security;
 alter table public.feature_flags enable row level security;
+alter table public.ad_slots enable row level security;
+alter table public.ads_global_settings enable row level security;
+alter table public.tracked_leagues enable row level security;
 
 -- Helper: is the current user an admin?
 create function public.is_admin()
@@ -348,6 +399,9 @@ create policy "public read" on public.coach_career for select using (true);
 create policy "public read" on public.sponsors for select using (true);
 create policy "public read" on public.seo_settings for select using (true);
 create policy "public read" on public.feature_flags for select using (true);
+create policy "public read enabled ad slots" on public.ad_slots for select using (enabled = true or public.is_admin());
+create policy "public read ads settings" on public.ads_global_settings for select using (true);
+create policy "public read tracked leagues" on public.tracked_leagues for select using (true);
 create policy "public read visible comments" on public.comments for select using (status = 'visible' or public.is_admin());
 create policy "public read polls" on public.polls for select using (true);
 create policy "public read poll options" on public.poll_options for select using (true);
@@ -368,6 +422,13 @@ create policy "admin all update" on public.sponsors for update using (public.is_
 create policy "admin all delete" on public.sponsors for delete using (public.is_admin());
 create policy "admin update seo" on public.seo_settings for update using (public.is_admin());
 create policy "admin update flags" on public.feature_flags for update using (public.is_admin());
+create policy "admin all" on public.ad_slots for insert with check (public.is_admin());
+create policy "admin all update" on public.ad_slots for update using (public.is_admin());
+create policy "admin all delete" on public.ad_slots for delete using (public.is_admin());
+create policy "admin update ads settings" on public.ads_global_settings for update using (public.is_admin());
+create policy "admin manage tracked leagues insert" on public.tracked_leagues for insert with check (public.is_admin());
+create policy "admin manage tracked leagues update" on public.tracked_leagues for update using (public.is_admin());
+create policy "admin manage tracked leagues delete" on public.tracked_leagues for delete using (public.is_admin());
 
 -- Profiles: users read/update their own; admins read & update all (ban etc).
 create policy "read own profile" on public.profiles for select using (auth.uid() = id or public.is_admin());

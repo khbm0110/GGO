@@ -239,11 +239,39 @@ export interface SeoSettings {
   ogImageUrl: string;
 }
 
-export interface AdSettings {
-  provider: 'adsense' | 'other' | 'none';
-  headerAd: { code: string; enabled: boolean };
-  sidebarAd: { code: string; enabled: boolean };
-  inArticleAd: { code: string; enabled: boolean };
+export type AdPlacement =
+  | 'HOME_TOP'       // أعلى الرئيسية تحت الهيدر
+  | 'SIDEBAR'        // الشريط الجانبي
+  | 'IN_ARTICLE'     // داخل نص المقال
+  | 'BETWEEN_CARDS'  // بين بطاقات الأخبار بالقوائم
+  | 'MATCH_PAGE'     // صفحة المباراة
+  | 'BEFORE_FOOTER'; // قبل نهاية الصفحة
+
+export const AD_PLACEMENT_LABELS: Record<AdPlacement, string> = {
+  HOME_TOP: 'أعلى الرئيسية',
+  SIDEBAR: 'الشريط الجانبي',
+  IN_ARTICLE: 'داخل المقال',
+  BETWEEN_CARDS: 'بين بطاقات الأخبار',
+  MATCH_PAGE: 'صفحة المباراة',
+  BEFORE_FOOTER: 'قبل الفوتر',
+};
+
+export interface AdSlot {
+  id: string;
+  placement: AdPlacement;
+  label: string;                 // اسم توضيحي يختاره الأدمن
+  network: 'adsense' | 'direct' | 'other';
+  code: string;                  // كود HTML/JS الخام من الشبكة أو الراعي
+  enabled: boolean;
+  pages: string[];               // 'all' أو 'home' | 'article' | 'match' | 'club' | 'player' | 'standings'
+  startDate?: string | null;     // ISO date - للحملات المجدولة (رعاة مباشرون)
+  endDate?: string | null;
+  updatedAt?: string;
+}
+
+export interface AdsGlobalSettings {
+  masterEnabled: boolean;   // مفتاح الإيقاف الطارئ لكل الإعلانات دفعة واحدة
+  adsTxtContent: string;    // محتوى ملف ads.txt المطلوب لاعتماد AdSense
 }
 
 // FIX: Add missing analytics types for Admin Dashboard.

@@ -13,6 +13,7 @@ import type { Player, ClubProfile, Article } from '@/types';
 import type { TransferRecord, InjuryRecord, AwardRecord } from '@/types/community';
 
 type TabKey = 'OVERVIEW' | 'STATS' | 'CAREER' | 'NEWS';
+type SyncState = 'IDLE' | 'SYNCING' | 'FAILED' | 'RATE_LIMITED';
 
 export default function PlayerDetailPage() {
   const params = useParams<{ clubId: string; playerId: string }>();
@@ -20,11 +21,52 @@ export default function PlayerDetailPage() {
   const [career, setCareer] = useState<{ transfers: TransferRecord[]; injuries: InjuryRecord[]; awards: AwardRecord[] } | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
   const [activeTab, setActiveTab] = useState<TabKey>('OVERVIEW');
+  const [syncState, setSyncState] = useState<SyncState>('IDLE');
 
   useEffect(() => {
     if (!params?.clubId || !params?.playerId) return;
-    data.getPlayerById(params.clubId, params.playerId).then(setResult);
-    data.getPlayerCareerData(params.clubId, params.playerId).then(setCareer);
+    const { clubId, playerId } = params;
+    setResult(undefined);
+    setSyncState('IDLE');
+
+    data.getPlayerById(clubId, playerId).then(async (found) => {
+      if (found) {
+        setResult(found);
+        return;
+      }
+
+      // Not in our database yet. If the id came from a live match via
+      // API-Football (namespaced "af-..."), auto-create the club/player
+      // from the API the first time anyone opens this page, then load
+      // the freshly-stored row like any other player.
+      if (!playerId.startsWith('af-')) {
+        setResult(null);
+        return;
+      }
+
+      setSyncState('SYNCING');
+      try {
+        const res = await fetch('/api/sync/player', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clubId, playerId }),
+        });
+        if (res.status === 429) {
+          setSyncState('RATE_LIMITED');
+          setResult(null);
+          return;
+        }
+        if (!res.ok) throw new Error('sync failed');
+        const refreshed = await data.getPlayerById(clubId, playerId);
+        setResult(refreshed);
+        setSyncState('IDLE');
+      } catch {
+        setSyncState('FAILED');
+        setResult(null);
+      }
+    });
+
+    data.getPlayerCareerData(clubId, playerId).then(setCareer);
   }, [params?.clubId, params?.playerId]);
 
   useEffect(() => {
@@ -33,6 +75,14 @@ export default function PlayerDetailPage() {
       setRelatedArticles(articles.filter((a) => a.title.includes(result.player.name)));
     });
   }, [result]);
+
+  if (syncState === 'SYNCING') {
+    return (
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center text-[var(--fg-faint)]">
+        جارٍ إحضار بيانات اللاعب من API-Football...
+      </div>
+    );
+  }
 
   if (result === undefined) {
     return <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center text-[var(--fg-faint)]">جارٍ التحميل...</div>;
@@ -43,7 +93,13 @@ export default function PlayerDetailPage() {
       <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center text-[var(--fg)]">
         <div className="text-center p-8 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)]">
           <h2 className="text-2xl font-bold mb-2">عذراً</h2>
-          <p className="text-[var(--fg-subtle)]">بيانات هذا اللاعب غير متوفرة حالياً.</p>
+          <p className="text-[var(--fg-subtle)]">
+            {syncState === 'RATE_LIMITED'
+              ? 'الموقع وصل الحد الأقصى المسموح من طلبات API-Football مؤقتًا — جرّب بعد دقيقة.'
+              : syncState === 'FAILED'
+              ? 'تعذّر جلب بيانات هذا اللاعب من API-Football حاليًا.'
+              : 'بيانات هذا اللاعب غير متوفرة حالياً.'}
+          </p>
           <Link href="/clubs" className="text-primary mt-4 inline-block font-bold hover:underline">العودة للأندية</Link>
         </div>
       </div>

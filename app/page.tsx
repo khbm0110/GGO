@@ -5,6 +5,7 @@ import NewsCard from '@/components/NewsCard';
 import MatchTicker from '@/components/MatchTicker';
 import StandingsWidget from '@/components/StandingsWidget';
 import PollWidget from '@/components/PollWidget';
+import AdSlot from '@/components/AdSlot';
 import { Category } from '@/types';
 import { isSameCalendarDay } from '@/lib/services/dateService';
 
@@ -46,6 +47,10 @@ export default async function HomePage() {
   return (
     <div className="pb-12">
       <MatchTicker matches={todaysMatches} />
+
+      <div className="container mx-auto px-4">
+        <AdSlot placement="HOME_TOP" page="home" />
+      </div>
 
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

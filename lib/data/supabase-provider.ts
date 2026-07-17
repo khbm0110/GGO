@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/client';
 import { createPublicClient } from '@/lib/supabase/public';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { DataProvider } from './provider';
-import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, Player, MatchDetails } from '@/types';
+import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, Player, MatchDetails, AdSlot, AdsGlobalSettings } from '@/types';
 import type { Prediction, LeaderboardEntry, Poll, TransferRecord, InjuryRecord, AwardRecord, CoachCareerEntry } from '@/types/community';
 
 // Runs in both server and client contexts. Server Components in this
@@ -412,6 +412,78 @@ export const supabaseProvider: DataProvider = {
         meta_keywords: settings.metaKeywords,
         og_image_url: settings.ogImageUrl,
       })
+      .eq('id', 1);
+    if (error) throw error;
+  },
+
+  async getAdSlots() {
+    const supabase = await getClient();
+    const { data } = await supabase.from('ad_slots').select('*').order('placement');
+    return (data ?? []).map((row: any) => ({
+      id: row.id,
+      placement: row.placement,
+      label: row.label,
+      network: row.network,
+      code: row.code,
+      enabled: row.enabled,
+      pages: row.pages ?? ['all'],
+      startDate: row.start_date,
+      endDate: row.end_date,
+      updatedAt: row.updated_at,
+    })) as AdSlot[];
+  },
+  async addAdSlot(slot) {
+    const supabase = await getClient();
+    const { error } = await supabase.from('ad_slots').insert({
+      id: slot.id,
+      placement: slot.placement,
+      label: slot.label,
+      network: slot.network,
+      code: slot.code,
+      enabled: slot.enabled,
+      pages: slot.pages,
+      start_date: slot.startDate || null,
+      end_date: slot.endDate || null,
+    });
+    if (error) throw error;
+  },
+  async updateAdSlot(slot) {
+    const supabase = await getClient();
+    const { error } = await supabase
+      .from('ad_slots')
+      .update({
+        placement: slot.placement,
+        label: slot.label,
+        network: slot.network,
+        code: slot.code,
+        enabled: slot.enabled,
+        pages: slot.pages,
+        start_date: slot.startDate || null,
+        end_date: slot.endDate || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', slot.id);
+    if (error) throw error;
+  },
+  async deleteAdSlot(id) {
+    const supabase = await getClient();
+    const { error } = await supabase.from('ad_slots').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+  async getAdsGlobalSettings() {
+    const supabase = await getClient();
+    const { data } = await supabase.from('ads_global_settings').select('*').eq('id', 1).single();
+    return {
+      masterEnabled: data?.master_enabled ?? true,
+      adsTxtContent: data?.ads_txt_content ?? '',
+    } as AdsGlobalSettings;
+  },
+  async updateAdsGlobalSettings(settings) {
+    const supabase = await getClient();
+    const { error } = await supabase
+      .from('ads_global_settings')
+      .update({ master_enabled: settings.masterEnabled, ads_txt_content: settings.adsTxtContent })
       .eq('id', 1);
     if (error) throw error;
   },

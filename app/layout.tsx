@@ -4,7 +4,6 @@ import './globals.css';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import Header from '@/components/Header';
-import MobileNavigation from '@/components/MobileNavigation';
 import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
 
 const cairo = Cairo({
@@ -38,8 +37,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <Header />
-            <main className="pb-16 lg:pb-0">{children}</main>
-            <MobileNavigation />
+            <main>{children}</main>
             <ServiceWorkerRegister />
           </AuthProvider>
         </ThemeProvider>

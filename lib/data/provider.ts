@@ -1,4 +1,4 @@
-import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, Player, MatchDetails } from '@/types';
+import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, Player, MatchDetails, AdSlot, AdsGlobalSettings } from '@/types';
 import type { Prediction, LeaderboardEntry, Poll, TransferRecord, InjuryRecord, AwardRecord, CoachCareerEntry } from '@/types/community';
 
 // This is the single "contract" the whole app talks to for data.
@@ -46,6 +46,13 @@ export interface DataProvider {
 
   getSeoSettings(): Promise<SeoSettings>;
   updateSeoSettings(settings: SeoSettings): Promise<void>;
+
+  getAdSlots(): Promise<AdSlot[]>;
+  addAdSlot(slot: AdSlot): Promise<void>;
+  updateAdSlot(slot: AdSlot): Promise<void>;
+  deleteAdSlot(id: string): Promise<void>;
+  getAdsGlobalSettings(): Promise<AdsGlobalSettings>;
+  updateAdsGlobalSettings(settings: AdsGlobalSettings): Promise<void>;
 
   getFeatureFlags(): Promise<FeatureFlags>;
   setFeatureFlag(key: keyof FeatureFlags, value: boolean): Promise<void>;

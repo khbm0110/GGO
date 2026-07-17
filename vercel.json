@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/import-fixtures",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/sync-finished-matches",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

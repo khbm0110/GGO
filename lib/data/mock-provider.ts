@@ -1,4 +1,4 @@
-import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, MatchDetails } from '@/types';
+import type { Article, Match, Standing, ClubProfile, Comment, User, Sponsor, SeoSettings, FeatureFlags, MatchDetails, AdSlot, AdsGlobalSettings } from '@/types';
 import type { Prediction, LeaderboardEntry, Poll, TransferRecord, InjuryRecord, AwardRecord, CoachCareerEntry } from '@/types/community';
 import type { DataProvider } from './provider';
 import {
@@ -22,6 +22,8 @@ const clubs: Record<string, ClubProfile> = { ...(CLUB_DATABASE as Record<string,
 const sponsors: Sponsor[] = [...MOCK_SPONSORS];
 let seoSettings: SeoSettings = { ...DEFAULT_SEO_SETTINGS };
 let featureFlags: FeatureFlags = { ...DEFAULT_FEATURE_FLAGS };
+const adSlots: AdSlot[] = [];
+let adsGlobalSettings: AdsGlobalSettings = { masterEnabled: true, adsTxtContent: '' };
 const predictions: Prediction[] = [];
 let activePoll: Poll = {
   id: 'poll-1',
@@ -245,6 +247,31 @@ export const mockProvider: DataProvider = {
   },
   async updateSeoSettings(settings) {
     seoSettings = settings;
+    return delay(undefined);
+  },
+
+  async getAdSlots() {
+    return delay([...adSlots]);
+  },
+  async addAdSlot(slot) {
+    adSlots.unshift(slot);
+    return delay(undefined);
+  },
+  async updateAdSlot(slot) {
+    const idx = adSlots.findIndex((s) => s.id === slot.id);
+    if (idx > -1) adSlots[idx] = slot;
+    return delay(undefined);
+  },
+  async deleteAdSlot(id) {
+    const idx = adSlots.findIndex((s) => s.id === id);
+    if (idx > -1) adSlots.splice(idx, 1);
+    return delay(undefined);
+  },
+  async getAdsGlobalSettings() {
+    return delay({ ...adsGlobalSettings });
+  },
+  async updateAdsGlobalSettings(settings) {
+    adsGlobalSettings = settings;
     return delay(undefined);
   },
 

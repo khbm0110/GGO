@@ -6,15 +6,16 @@ import Link from 'next/link';
 import {
   Shield, Plus, Edit, Trash2, LayoutGrid, FileText, Users, Settings, Check, Ban,
   MessageCircle, Clock, ShoppingBag, Globe, Megaphone, BarChart2, Bot, Save, LogOut,
-  Home,
+  Home, Power, Trophy, Search, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { data } from '@/lib/data';
 import ArticleEditor from '@/components/admin/ArticleEditor';
 import ClubEditor from '@/components/admin/ClubEditor';
-import { Category, type Article, type User, type Comment, type ClubProfile, type Sponsor, type SeoSettings, type FeatureFlags } from '@/types';
+import AdSlotEditor from '@/components/admin/AdSlotEditor';
+import { Category, AD_PLACEMENT_LABELS, type Article, type User, type Comment, type ClubProfile, type Sponsor, type SeoSettings, type FeatureFlags, type AdSlot, type AdsGlobalSettings } from '@/types';
 
-type AdminTab = 'OVERVIEW' | 'ARTICLES' | 'USERS' | 'MODERATION' | 'CLUBS' | 'SPONSORS' | 'SEO' | 'ADS' | 'ANALYTICS' | 'AUTOPILOT' | 'SETTINGS';
+type AdminTab = 'OVERVIEW' | 'ARTICLES' | 'USERS' | 'MODERATION' | 'CLUBS' | 'SPONSORS' | 'SEO' | 'ADS' | 'LEAGUES' | 'ANALYTICS' | 'AUTOPILOT' | 'SETTINGS';
 
 const COMING_SOON_TABS: { key: AdminTab; label: string; icon: typeof ShoppingBag; note: string }[] = [
   { key: 'ANALYTICS', label: 'التحليلات', icon: BarChart2, note: 'يحتاج ربط Google Analytics أولاً' },
@@ -38,16 +39,33 @@ export default function AdminDashboardPage() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [seoSettings, setSeoSettings] = useState<SeoSettings | null>(null);
   const [featureFlags, setFeatureFlagsState] = useState<FeatureFlags | null>(null);
+  const [adSlots, setAdSlots] = useState<AdSlot[]>([]);
+  const [adsGlobal, setAdsGlobal] = useState<AdsGlobalSettings | null>(null);
+  const [trackedLeagues, setTrackedLeagues] = useState<any[]>([]);
+  const [leagueQuery, setLeagueQuery] = useState('');
+  const [leagueResults, setLeagueResults] = useState<any[]>([]);
+  const [leagueSearching, setLeagueSearching] = useState(false);
+  const [leagueSearchError, setLeagueSearchError] = useState<string | null>(null);
+  const [importSummary, setImportSummary] = useState<any>(null);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [idSearchType, setIdSearchType] = useState<'team' | 'player'>('team');
+  const [idSearchQuery, setIdSearchQuery] = useState('');
+  const [idSearchResults, setIdSearchResults] = useState<any[]>([]);
+  const [idSearching, setIdSearching] = useState(false);
+  const [idSearchError, setIdSearchError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
   const [editingArticle, setEditingArticle] = useState<Partial<Article> | null>(null);
   const [editorMode, setEditorMode] = useState<'NEW' | 'EDIT'>('NEW');
   const [editingClub, setEditingClub] = useState<ClubProfile | null>(null);
+  const [editingAdSlot, setEditingAdSlot] = useState<AdSlot | null>(null);
 
   useEffect(() => {
     if (!loading && !isAdmin) router.replace('/');
   }, [isAdmin, loading, router]);
 
   async function refreshAll() {
-    const [a, u, c, cl, sp, seo, ff] = await Promise.all([
+    const [a, u, c, cl, sp, seo, ff, ads, adsG] = await Promise.all([
       data.getArticles(),
       data.getUsers(),
       data.getAllComments(),
@@ -55,6 +73,8 @@ export default function AdminDashboardPage() {
       data.getSponsors(),
       data.getSeoSettings(),
       data.getFeatureFlags(),
+      data.getAdSlots(),
+      data.getAdsGlobalSettings(),
     ]);
     setArticles(a);
     setUsers(u);
@@ -63,11 +83,140 @@ export default function AdminDashboardPage() {
     setSponsors(sp);
     setSeoSettings(seo);
     setFeatureFlagsState(ff);
+    setAdSlots(ads);
+    setAdsGlobal(adsG);
+  }
+
+  async function refreshTrackedLeagues() {
+    const res = await fetch('/api/admin/leagues');
+    if (res.ok) {
+      const json = await res.json();
+      setTrackedLeagues(json.leagues ?? []);
+    }
   }
 
   useEffect(() => {
     refreshAll();
+    refreshTrackedLeagues();
   }, []);
+
+  async function handleSearchLeagues(e: React.FormEvent) {
+    e.preventDefault();
+    if (!leagueQuery.trim()) return;
+    setLeagueSearching(true);
+    setLeagueSearchError(null);
+    try {
+      const res = await fetch(`/api/admin/leagues?q=${encodeURIComponent(leagueQuery.trim())}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'فشل البحث');
+      setLeagueResults(json.results ?? []);
+    } catch (e: any) {
+      setLeagueSearchError(e?.message ?? 'فشل البحث');
+    } finally {
+      setLeagueSearching(false);
+    }
+  }
+
+  async function handleAddLeague(result: any) {
+    if (!result.currentSeason) {
+      alert('ما قدرنا نحدد الموسم الحالي لهذا الدوري تلقائيًا من API-Football.');
+      return;
+    }
+    await fetch('/api/admin/leagues', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        leagueApiId: result.leagueApiId,
+        season: result.currentSeason,
+        name: result.name,
+        country: result.country,
+        logo: result.logo,
+      }),
+    });
+    refreshTrackedLeagues();
+  }
+
+  async function handleRemoveLeague(id: string) {
+    if (!confirm('إيقاف متابعة هذا الدوري؟ المباريات المستوردة سابقًا بتفضل موجودة، بس ما بتتحدث تلقائيًا بعد كذا.')) return;
+    await fetch('/api/admin/leagues', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    refreshTrackedLeagues();
+  }
+
+  function parseImportFile(text: string, isCsv: boolean): { club_api_id: number; player_api_id: number }[] {
+    if (!isCsv) {
+      const json = JSON.parse(text);
+      const list = Array.isArray(json) ? json : json.rows;
+      if (!Array.isArray(list)) throw new Error('الملف لازم يكون مصفوفة JSON أو كائن فيه مفتاح rows.');
+      return list.map((r: any) => ({ club_api_id: Number(r.club_api_id), player_api_id: Number(r.player_api_id) }));
+    }
+    const lines = text.trim().split(/\r?\n/).filter(Boolean);
+    if (lines.length < 2) throw new Error('ملف CSV فاضي أو ناقص صفوف.');
+    const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+    const clubIdx = headers.indexOf('club_api_id');
+    const playerIdx = headers.indexOf('player_api_id');
+    if (clubIdx === -1 || playerIdx === -1) throw new Error('ملف CSV لازم يحتوي عمودين باسم club_api_id و player_api_id.');
+    return lines.slice(1).map((line) => {
+      const cols = line.split(',');
+      return { club_api_id: Number(cols[clubIdx]?.trim()), player_api_id: Number(cols[playerIdx]?.trim()) };
+    });
+  }
+
+  async function handleSearchIds(e: React.FormEvent) {
+    e.preventDefault();
+    if (idSearchQuery.trim().length < 3) {
+      setIdSearchError('اكتب 3 أحرف على الأقل');
+      return;
+    }
+    setIdSearching(true);
+    setIdSearchError(null);
+    try {
+      const res = await fetch(`/api/admin/search-ids?type=${idSearchType}&q=${encodeURIComponent(idSearchQuery.trim())}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'فشل البحث');
+      setIdSearchResults(json.results ?? []);
+    } catch (e: any) {
+      setIdSearchError(e?.message ?? 'فشل البحث');
+    } finally {
+      setIdSearching(false);
+    }
+  }
+
+  function handleCopyId(id: number) {
+    navigator.clipboard.writeText(String(id));
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 1500);
+  }
+
+  async function handleImportFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setImportError(null);
+    setImportSummary(null);
+    try {
+      const text = await file.text();
+      const isCsv = file.name.toLowerCase().endsWith('.csv');
+      const rows = parseImportFile(text, isCsv);
+      const res = await fetch('/api/admin/bulk-import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rows }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'فشل الاستيراد');
+      setImportSummary(json.summary);
+      refreshAll();
+    } catch (err: any) {
+      setImportError(err?.message ?? 'فشل قراءة أو استيراد الملف');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  }
 
   if (loading || !isAdmin) {
     return <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center text-[var(--fg-faint)]">جارٍ التحقق من الصلاحيات...</div>;
@@ -159,6 +308,41 @@ export default function AdminDashboardPage() {
     refreshAll();
   }
 
+  async function handleSaveAdSlot(slotData: AdSlot) {
+    const exists = adSlots.some((s) => s.id === slotData.id);
+    if (exists) await data.updateAdSlot(slotData);
+    else await data.addAdSlot(slotData);
+    setEditingAdSlot(null);
+    refreshAll();
+  }
+
+  async function handleDeleteAdSlot(id: string) {
+    if (confirm('هل أنت متأكد أنك تريد حذف هذه الفتحة الإعلانية؟')) {
+      await data.deleteAdSlot(id);
+      refreshAll();
+    }
+  }
+
+  async function handleToggleAdSlot(slotItem: AdSlot) {
+    await data.updateAdSlot({ ...slotItem, enabled: !slotItem.enabled });
+    refreshAll();
+  }
+
+  async function handleToggleAdsKillSwitch() {
+    if (!adsGlobal) return;
+    const next = { ...adsGlobal, masterEnabled: !adsGlobal.masterEnabled };
+    if (!next.masterEnabled && !confirm('هذا سيوقف كل الإعلانات بالموقع فورًا لجميع الزوار. متأكد؟')) return;
+    await data.updateAdsGlobalSettings(next);
+    refreshAll();
+  }
+
+  async function handleSaveAdsTxt(e: React.FormEvent) {
+    e.preventDefault();
+    if (!adsGlobal) return;
+    await data.updateAdsGlobalSettings(adsGlobal);
+    alert('تم حفظ ملف ads.txt');
+  }
+
   const NAV_GROUPS: { group: string; items: { key: AdminTab; label: string; icon: typeof LayoutGrid }[] }[] = [
     { group: 'عام', items: [{ key: 'OVERVIEW', label: 'نظرة عامة', icon: LayoutGrid }] },
     {
@@ -178,7 +362,9 @@ export default function AdminDashboardPage() {
     {
       group: 'الموقع',
       items: [
-        { key: 'SPONSORS', label: 'الرعاة والإعلانات', icon: Megaphone },
+        { key: 'ADS', label: 'الإعلانات', icon: Megaphone },
+        { key: 'LEAGUES', label: 'الدوريات المتابَعة', icon: Trophy },
+        { key: 'SPONSORS', label: 'الرعاة', icon: ShoppingBag },
         { key: 'SEO', label: 'SEO', icon: Globe },
         { key: 'SETTINGS', label: 'الإعدادات العامة', icon: Settings },
         ...COMING_SOON_TABS,
@@ -272,7 +458,8 @@ export default function AdminDashboardPage() {
               <StatCard label="المقالات" value={articles.length} icon={FileText} />
               <StatCard label="المستخدمون" value={users.length} icon={Users} />
               <StatCard label="الأندية" value={clubs.length} icon={ShoppingBag} />
-              <StatCard label="الرعاة" value={sponsors.length} icon={Megaphone} />
+              <StatCard label="الرعاة" value={sponsors.length} icon={ShoppingBag} />
+              <StatCard label="فتحات الإعلانات المفعّلة" value={adSlots.filter((s) => s.enabled).length} icon={Megaphone} />
               <StatCard label="التعليقات" value={comments.length} icon={MessageCircle} />
               <StatCard label="مقالات عاجلة" value={articles.filter((a) => a.isBreaking).length} icon={Clock} />
               <StatCard label="تعليقات مُبلَّغ عنها" value={comments.filter((c) => c.status === 'reported').length} icon={MessageCircle} />
@@ -483,7 +670,7 @@ export default function AdminDashboardPage() {
         {activeTab === 'SPONSORS' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-black text-[var(--fg)]">الرعاة والإعلانات ({sponsors.length})</h1>
+              <h1 className="text-2xl font-black text-[var(--fg)]">الرعاة ({sponsors.length})</h1>
               <button onClick={handleAddSponsor} className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-emerald-600 text-[var(--fg)] rounded-lg font-bold text-sm">
                 <Plus size={16} /> راعٍ جديد
               </button>
@@ -519,8 +706,318 @@ export default function AdminDashboardPage() {
                 </tbody>
               </table>
             </div>
-            <div className="mt-6 bg-[color-mix(in_srgb,var(--bg-surface)_50%,transparent)] border border-dashed border-[var(--border-subtle)] rounded-xl p-4 text-center text-[var(--fg-faint)] text-sm">
-              ⚠️ ربط Google AdSense الحقيقي (رموز الإعلانات المباشرة) يحتاج حساب AdSense معتمد — سيُضاف لاحقًا.
+          </div>
+        )}
+
+        {activeTab === 'ADS' && adsGlobal && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-black text-[var(--fg)]">الإعلانات ({adSlots.length})</h1>
+              <button
+                onClick={() =>
+                  setEditingAdSlot({
+                    id: `ad-${Date.now()}`,
+                    placement: 'HOME_TOP',
+                    label: '',
+                    network: 'adsense',
+                    code: '',
+                    enabled: false,
+                    pages: ['all'],
+                  })
+                }
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-emerald-600 text-[var(--fg)] rounded-lg font-bold text-sm"
+              >
+                <Plus size={16} /> فتحة إعلانية جديدة
+              </button>
+            </div>
+
+            <div
+              className={`mb-6 rounded-2xl p-5 border flex items-center justify-between gap-4 flex-wrap ${
+                adsGlobal.masterEnabled ? 'bg-[var(--bg-surface)] border-[var(--border-subtle)]' : 'bg-red-500/5 border-red-500/40'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl ${adsGlobal.masterEnabled ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                  <Power size={20} />
+                </div>
+                <div>
+                  <p className="font-bold text-[var(--fg)]">{adsGlobal.masterEnabled ? 'الإعلانات مفعّلة بالموقع' : 'كل الإعلانات موقوفة الآن'}</p>
+                  <p className="text-xs text-[var(--fg-faint)]">مفتاح إيقاف طارئ يوقف كل الفتحات دفعة واحدة بغضّ النظر عن حالتها الفردية.</p>
+                </div>
+              </div>
+              <button
+                onClick={handleToggleAdsKillSwitch}
+                className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap ${
+                  adsGlobal.masterEnabled ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20'
+                }`}
+              >
+                {adsGlobal.masterEnabled ? 'إيقاف الكل' : 'إعادة التفعيل'}
+              </button>
+            </div>
+
+            {adSlots.length === 0 ? (
+              <div className="text-center py-16 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)] border-dashed text-[var(--fg-faint)] mb-8">
+                لا توجد فتحات إعلانية بعد — أضف أول فتحة من الزر أعلاه.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                {adSlots.map((s) => (
+                  <div key={s.id} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-4">
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div className="min-w-0">
+                        <p className="font-bold text-[var(--fg)] truncate">{s.label || AD_PLACEMENT_LABELS[s.placement]}</p>
+                        <p className="text-xs text-[var(--fg-faint)]">{AD_PLACEMENT_LABELS[s.placement]}</p>
+                      </div>
+                      <span
+                        className={`text-[10px] font-black px-2 py-1 rounded-full flex-shrink-0 ${
+                          s.network === 'adsense' ? 'bg-blue-500/10 text-blue-400' : 'bg-amber-500/10 text-amber-400'
+                        }`}
+                      >
+                        {s.network === 'adsense' ? 'AdSense' : s.network === 'direct' ? 'راعٍ مباشر' : 'أخرى'}
+                      </span>
+                    </div>
+
+                    {(s.startDate || s.endDate) && (
+                      <p className="text-[10px] text-[var(--fg-faint)] mb-2">
+                        📅 {s.startDate || '—'} → {s.endDate || 'بلا نهاية'}
+                      </p>
+                    )}
+
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-[var(--border-subtle)]">
+                      <button
+                        onClick={() => handleToggleAdSlot(s)}
+                        className={`text-xs px-2 py-1 rounded-full font-bold ${s.enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[var(--bg-surface-2)] text-[var(--fg-faint)]'}`}
+                      >
+                        {s.enabled ? 'مفعّلة' : 'موقوفة'}
+                      </button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setEditingAdSlot(s)} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-3)] rounded text-[var(--fg-muted)]">
+                          <Edit size={14} />
+                        </button>
+                        <button onClick={() => handleDeleteAdSlot(s.id)} className="p-1.5 bg-[var(--bg-surface-2)] hover:bg-red-500/20 hover:text-red-500 rounded text-[var(--fg-muted)]">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="max-w-2xl">
+              <h2 className="text-lg font-black text-[var(--fg)] mb-3">ملف ads.txt</h2>
+              <p className="text-xs text-[var(--fg-faint)] mb-3">مطلوب من Google لاعتماد حساب AdSense على النطاق — الصق هنا السطر اللي يعطيك ياه AdSense.</p>
+              <form onSubmit={handleSaveAdsTxt} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 space-y-4">
+                <textarea
+                  value={adsGlobal.adsTxtContent}
+                  onChange={(e) => setAdsGlobal({ ...adsGlobal, adsTxtContent: e.target.value })}
+                  rows={4}
+                  dir="ltr"
+                  placeholder="google.com, pub-0000000000000000, DIRECT, f08c47fec0942fa0"
+                  className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--fg)] font-mono text-sm"
+                />
+                <button type="submit" className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-emerald-600 text-[var(--fg)] rounded-lg font-bold text-sm">
+                  <Save size={16} /> حفظ ads.txt
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'LEAGUES' && (
+          <div>
+            <div className="mb-6">
+              <h1 className="text-2xl font-black text-[var(--fg)]">الدوريات المتابَعة ({trackedLeagues.length})</h1>
+              <p className="text-sm text-[var(--fg-faint)] mt-1">
+                الدوريات هنا تُستورد مبارياتها تلقائيًا كل يوم من API-Football، وتُحدَّث نتائجها وإحصائيات لاعبيها فور انتهاء كل مباراة.
+              </p>
+            </div>
+
+            <form onSubmit={handleSearchLeagues} className="flex gap-2 mb-6 max-w-lg">
+              <div className="relative flex-1">
+                <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-faint)]" />
+                <input
+                  value={leagueQuery}
+                  onChange={(e) => setLeagueQuery(e.target.value)}
+                  placeholder="ابحث باسم الدوري... مثال: Saudi"
+                  className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg pr-9 pl-3 py-2 text-sm text-[var(--fg)]"
+                />
+              </div>
+              <button type="submit" disabled={leagueSearching} className="px-4 py-2 bg-primary hover:bg-emerald-600 text-white rounded-lg text-sm font-bold disabled:opacity-50">
+                {leagueSearching ? 'جارٍ البحث...' : 'بحث'}
+              </button>
+            </form>
+
+            {leagueSearchError && <p className="text-sm text-red-500 mb-4">{leagueSearchError}</p>}
+
+            {leagueResults.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-sm font-black text-[var(--fg-subtle)] mb-2">نتائج البحث</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {leagueResults.map((r) => {
+                    const alreadyTracked = trackedLeagues.some((t) => t.league_api_id === r.leagueApiId && t.season === r.currentSeason);
+                    return (
+                      <div key={r.leagueApiId} className="flex items-center justify-between gap-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-3">
+                        <div className="min-w-0">
+                          <p className="font-bold text-[var(--fg)] truncate">{r.name}</p>
+                          <p className="text-xs text-[var(--fg-faint)]">{r.country || '—'} {r.currentSeason ? `• موسم ${r.currentSeason}` : '• لا يوجد موسم حالي'}</p>
+                        </div>
+                        <button
+                          onClick={() => handleAddLeague(r)}
+                          disabled={alreadyTracked || !r.currentSeason}
+                          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold bg-primary/10 text-primary hover:bg-primary/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {alreadyTracked ? 'مُتابَع' : 'إضافة'}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <h2 className="text-sm font-black text-[var(--fg-subtle)] mb-2">الدوريات المفعّلة الآن</h2>
+            {trackedLeagues.length === 0 ? (
+              <div className="text-center py-12 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)] border-dashed text-[var(--fg-faint)]">
+                ما فيه دوريات متابَعة بعد — ابحث فوق وأضف أول دوري (مثل الدوري السعودي).
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {trackedLeagues.map((l) => (
+                  <div key={l.id} className="flex items-center justify-between gap-3 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-xl p-3">
+                    <div className="min-w-0">
+                      <p className="font-bold text-[var(--fg)] truncate">{l.name}</p>
+                      <p className="text-xs text-[var(--fg-faint)]">{l.country || '—'} • موسم {l.season}</p>
+                    </div>
+                    <button onClick={() => handleRemoveLeague(l.id)} className="flex-shrink-0 p-2 rounded-lg text-[var(--fg-faint)] hover:bg-red-500/10 hover:text-red-500">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-10 pt-8 border-t border-[var(--border-subtle)] max-w-2xl">
+              <h2 className="text-lg font-black text-[var(--fg)] mb-1">أداة البحث عن المعرّفات (نادٍ / لاعب)</h2>
+              <p className="text-xs text-[var(--fg-faint)] mb-4">دوّر بالاسم على معرّف API-Football عشان تستخدمه بملف الاستيراد الجماعي تحت.</p>
+
+              <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6">
+                <div className="flex gap-2 mb-3">
+                  <button
+                    type="button"
+                    onClick={() => { setIdSearchType('team'); setIdSearchResults([]); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold ${idSearchType === 'team' ? 'bg-primary text-white' : 'bg-[var(--bg-surface-2)] text-[var(--fg-faint)]'}`}
+                  >
+                    نادٍ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setIdSearchType('player'); setIdSearchResults([]); }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold ${idSearchType === 'player' ? 'bg-primary text-white' : 'bg-[var(--bg-surface-2)] text-[var(--fg-faint)]'}`}
+                  >
+                    لاعب
+                  </button>
+                </div>
+
+                <form onSubmit={handleSearchIds} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--fg-faint)]" />
+                    <input
+                      value={idSearchQuery}
+                      onChange={(e) => setIdSearchQuery(e.target.value)}
+                      placeholder={idSearchType === 'team' ? 'مثال: Al Hilal' : 'مثال: Cristiano Ronaldo'}
+                      className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg pr-9 pl-3 py-2 text-sm text-[var(--fg)]"
+                    />
+                  </div>
+                  <button type="submit" disabled={idSearching} className="px-4 py-2 bg-primary hover:bg-emerald-600 text-white rounded-lg text-sm font-bold disabled:opacity-50">
+                    {idSearching ? '...' : 'بحث'}
+                  </button>
+                </form>
+
+                {idSearchError && <p className="text-sm text-red-500 mt-3">{idSearchError}</p>}
+
+                {idSearchResults.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {idSearchResults.map((r) => {
+                      const apiId = idSearchType === 'team' ? r.apiTeamId : r.apiPlayerId;
+                      return (
+                        <div key={apiId} className="flex items-center justify-between gap-3 bg-[var(--bg-base)] rounded-lg p-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {(r.logo || r.photo) && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={r.logo || r.photo} alt={r.name} className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-[var(--fg)] truncate">{r.name}</p>
+                              <p className="text-[10px] text-[var(--fg-faint)] truncate">{idSearchType === 'team' ? r.country : r.teamName || '—'}</p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleCopyId(apiId)}
+                            className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-mono font-bold bg-[var(--bg-surface-2)] hover:bg-[var(--bg-surface-3)] text-[var(--fg-muted)]"
+                          >
+                            {copiedId === apiId ? 'تم النسخ ✓' : `#${apiId}`}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-10 pt-8 border-t border-[var(--border-subtle)] max-w-2xl">
+              <h2 className="text-lg font-black text-[var(--fg)] mb-1">استيراد جماعي (JSON / CSV)</h2>
+              <p className="text-xs text-[var(--fg-faint)] mb-4">
+                لاستيراد نادي/فريق كامل دفعة وحدة بدل ما يتكوّن لاعب لاعب. الملف لازم يحتوي عمودين بس: <code dir="ltr" className="text-primary">club_api_id</code> و
+                <code dir="ltr" className="text-primary"> player_api_id</code> (معرّفات API-Football). البيانات الفعلية (الاسم، المركز...) تُجلب دائمًا مباشرة من API-Football، مو من الملف.
+              </p>
+
+              <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6">
+                <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[var(--border)] rounded-xl py-8 cursor-pointer hover:border-primary/50 transition-colors">
+                  <Plus size={20} className="text-[var(--fg-faint)]" />
+                  <span className="text-sm font-bold text-[var(--fg-muted)]">{importing ? 'جارٍ الاستيراد...' : 'اختر ملف .json أو .csv'}</span>
+                  <input type="file" accept=".json,.csv" onChange={handleImportFile} disabled={importing} className="hidden" />
+                </label>
+
+                {importError && <p className="text-sm text-red-500 mt-4">{importError}</p>}
+
+                {importSummary && (
+                  <div className="mt-4 space-y-2">
+                    {importSummary.rateLimited && (
+                      <p className="text-sm text-amber-500 font-bold">⚠️ توقف الاستيراد مؤقتًا بسبب تجاوز حد API-Football — أعد رفع نفس الملف بعد شوي وبيكمل من وين وقف.</p>
+                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                      <div className="bg-[var(--bg-base)] rounded-lg p-3 text-center">
+                        <span className="block text-xl font-black text-emerald-400">{importSummary.clubsCreated}</span>
+                        <span className="text-[10px] text-[var(--fg-faint)]">نادٍ جديد</span>
+                      </div>
+                      <div className="bg-[var(--bg-base)] rounded-lg p-3 text-center">
+                        <span className="block text-xl font-black text-emerald-400">{importSummary.playersCreated}</span>
+                        <span className="text-[10px] text-[var(--fg-faint)]">لاعب جديد</span>
+                      </div>
+                      <div className="bg-[var(--bg-base)] rounded-lg p-3 text-center">
+                        <span className="block text-xl font-black text-[var(--fg-faint)]">{importSummary.playersExisting}</span>
+                        <span className="text-[10px] text-[var(--fg-faint)]">موجود مسبقًا</span>
+                      </div>
+                      {importSummary.playersFailed > 0 && (
+                        <div className="bg-[var(--bg-base)] rounded-lg p-3 text-center">
+                          <span className="block text-xl font-black text-red-500">{importSummary.playersFailed}</span>
+                          <span className="text-[10px] text-[var(--fg-faint)]">فشل</span>
+                        </div>
+                      )}
+                    </div>
+                    {importSummary.errors?.length > 0 && (
+                      <details className="text-xs text-[var(--fg-faint)] mt-2">
+                        <summary className="cursor-pointer font-bold">تفاصيل الأخطاء ({importSummary.errors.length})</summary>
+                        <ul className="mt-2 space-y-1 list-disc pr-4">
+                          {importSummary.errors.map((e: string, i: number) => <li key={i}>{e}</li>)}
+                        </ul>
+                      </details>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -615,6 +1112,7 @@ export default function AdminDashboardPage() {
       )}
 
       {editingClub && <ClubEditor initialData={editingClub} onSave={handleSaveClub} onCancel={() => setEditingClub(null)} />}
+      {editingAdSlot && <AdSlotEditor initialData={editingAdSlot} onSave={handleSaveAdSlot} onCancel={() => setEditingAdSlot(null)} />}
     </div>
   );
 }

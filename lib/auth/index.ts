@@ -1,5 +1,5 @@
-import { mockAuth } from './mock-auth';
+import { supabaseAuth } from './supabase-auth';
 import type { AuthProvider } from './provider';
 
-// Switched to mock-auth for AI Studio execution
-export const auth: AuthProvider = mockAuth;
+// Switched from mock-auth to real Supabase Authentication.
+export const auth: AuthProvider = supabaseAuth;

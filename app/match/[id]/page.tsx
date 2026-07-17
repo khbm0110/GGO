@@ -7,6 +7,7 @@ import { ArrowRight, BarChart2, Users, Share2, AlertCircle, Loader2, MapPin } fr
 import TeamLogo from '@/components/TeamLogo';
 import MatchPrediction from '@/components/MatchPrediction';
 import MatchLineupPitch from '@/components/MatchLineupPitch';
+import AdSlot from '@/components/AdSlot';
 import { data } from '@/lib/data';
 import type { Match, MatchDetails } from '@/types';
 
@@ -79,6 +80,8 @@ export default function MatchCenterPage() {
         <div className="border-b border-[var(--border-subtle)]">
           <MatchPrediction match={match} />
         </div>
+
+        <AdSlot placement="MATCH_PAGE" page="match" />
 
         <div className="flex border-b border-[var(--border-subtle)]">
           <TabButton active={activeTab === 'STATS'} onClick={() => setActiveTab('STATS')} icon={BarChart2} label="إحصائيات" />

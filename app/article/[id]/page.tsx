@@ -4,6 +4,7 @@ import { data } from '@/lib/data';
 import { formatTimeAgo } from '@/lib/services/dateService';
 import ArticleComments from '@/components/ArticleComments';
 import FavoriteButton from '@/components/FavoriteButton';
+import AdSlot from '@/components/AdSlot';
 
 // This page reads live data (scores, standings, leaderboard...) that
 // changes constantly, so it must be rendered fresh on every request
@@ -36,6 +37,8 @@ export default async function ArticleDetailPage({ params }: { params: Promise<{ 
 
       <p className="text-lg text-[var(--fg-muted)] leading-relaxed mb-6 font-bold">{article.summary}</p>
       <div className="prose prose-invert max-w-none text-[var(--fg-muted)] leading-loose whitespace-pre-line mb-8">{article.content}</div>
+
+      <AdSlot placement="IN_ARTICLE" page="article" />
 
       <div className="border-t border-[var(--border-subtle)] pt-6 flex items-center gap-3 flex-wrap">
         <ArticleComments articleId={article.id} />
