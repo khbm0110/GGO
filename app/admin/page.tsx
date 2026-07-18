@@ -19,7 +19,6 @@ type AdminTab = 'OVERVIEW' | 'ARTICLES' | 'USERS' | 'MODERATION' | 'CLUBS' | 'SP
 
 const COMING_SOON_TABS: { key: AdminTab; label: string; icon: typeof ShoppingBag; note: string }[] = [
   { key: 'ANALYTICS', label: 'التحليلات', icon: BarChart2, note: 'يحتاج ربط Google Analytics أولاً' },
-  { key: 'AUTOPILOT', label: 'الأتمتة (RSS + AI)', icon: Bot, note: 'استيراد RSS، إعادة الكتابة بـ Gemini، النشر التلقائي' },
 ];
 
 export default function AdminDashboardPage() {
@@ -55,6 +54,12 @@ export default function AdminDashboardPage() {
   const [idSearching, setIdSearching] = useState(false);
   const [idSearchError, setIdSearchError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [autopilotSettings, setAutopilotSettings] = useState<any>(null);
+  const [autopilotProviders, setAutopilotProviders] = useState<any[]>([]);
+  const [pendingArticles, setPendingArticles] = useState<any[]>([]);
+  const [newRssName, setNewRssName] = useState('');
+  const [newRssUrl, setNewRssUrl] = useState('');
+  const [autopilotBusy, setAutopilotBusy] = useState(false);
   const [editingArticle, setEditingArticle] = useState<Partial<Article> | null>(null);
   const [editorMode, setEditorMode] = useState<'NEW' | 'EDIT'>('NEW');
   const [editingClub, setEditingClub] = useState<ClubProfile | null>(null);
@@ -98,7 +103,59 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     refreshAll();
     refreshTrackedLeagues();
+    refreshAutopilot();
   }, []);
+
+  async function refreshAutopilot() {
+    const [settingsRes, pendingRes] = await Promise.all([fetch('/api/admin/autopilot'), fetch('/api/admin/autopilot/review')]);
+    if (settingsRes.ok) {
+      const json = await settingsRes.json();
+      setAutopilotSettings(json.settings);
+      setAutopilotProviders(json.providers ?? []);
+    }
+    if (pendingRes.ok) {
+      const json = await pendingRes.json();
+      setPendingArticles(json.items ?? []);
+    }
+  }
+
+  async function handleSaveAutopilotSettings(patch: any) {
+    setAutopilotBusy(true);
+    try {
+      const res = await fetch('/api/admin/autopilot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(patch),
+      });
+      const json = await res.json();
+      if (res.ok) setAutopilotSettings(json.settings);
+    } finally {
+      setAutopilotBusy(false);
+    }
+  }
+
+  function handleAddRssSource() {
+    if (!newRssName.trim() || !newRssUrl.trim()) return;
+    const next = [...(autopilotSettings?.rss_sources ?? []), { name: newRssName.trim(), url: newRssUrl.trim() }];
+    handleSaveAutopilotSettings({ rss_sources: next });
+    setNewRssName('');
+    setNewRssUrl('');
+  }
+
+  function handleRemoveRssSource(url: string) {
+    const next = (autopilotSettings?.rss_sources ?? []).filter((s: any) => s.url !== url);
+    handleSaveAutopilotSettings({ rss_sources: next });
+  }
+
+  async function handleReviewAction(id: string, action: 'publish-now' | 'reject') {
+    await fetch('/api/admin/autopilot/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, action }),
+    });
+    refreshAutopilot();
+    refreshAll();
+  }
 
   async function handleSearchLeagues(e: React.FormEvent) {
     e.preventDefault();
@@ -363,6 +420,7 @@ export default function AdminDashboardPage() {
       group: 'الموقع',
       items: [
         { key: 'ADS', label: 'الإعلانات', icon: Megaphone },
+        { key: 'AUTOPILOT', label: 'الأتمتة (RSS + AI)', icon: Bot },
         { key: 'LEAGUES', label: 'الدوريات المتابَعة', icon: Trophy },
         { key: 'SPONSORS', label: 'الرعاة', icon: ShoppingBag },
         { key: 'SEO', label: 'SEO', icon: Globe },
@@ -820,6 +878,126 @@ export default function AdminDashboardPage() {
                   <Save size={16} /> حفظ ads.txt
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'AUTOPILOT' && autopilotSettings && (
+          <div>
+            <div className="mb-6">
+              <h1 className="text-2xl font-black text-[var(--fg)]">الأتمتة (RSS + AI)</h1>
+              <p className="text-sm text-[var(--fg-faint)] mt-1">استيراد أخبار من RSS، إعادة صياغتها بالذكاء الاصطناعي، ونشرها تلقائيًا بعد {autopilotSettings.review_window_minutes} دقائق ما لم تراجعها.</p>
+            </div>
+
+            {/* Master toggle + provider + review window */}
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-5 mb-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-[var(--fg)]">تفعيل الأتمتة</p>
+                  <p className="text-xs text-[var(--fg-faint)]">لما توقفها، الاستيراد التلقائي يتوقف بالكامل.</p>
+                </div>
+                <button
+                  onClick={() => handleSaveAutopilotSettings({ enabled: !autopilotSettings.enabled })}
+                  disabled={autopilotBusy}
+                  className={`px-4 py-2 rounded-lg text-sm font-bold ${autopilotSettings.enabled ? 'bg-emerald-500/10 text-emerald-400' : 'bg-[var(--bg-surface-2)] text-[var(--fg-faint)]'}`}
+                >
+                  {autopilotSettings.enabled ? 'مفعّلة' : 'موقوفة'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[var(--border-subtle)]">
+                <div>
+                  <label className="block text-sm text-[var(--fg-subtle)] mb-1.5">نموذج الذكاء الاصطناعي</label>
+                  <select
+                    value={autopilotSettings.active_provider}
+                    onChange={(e) => handleSaveAutopilotSettings({ active_provider: e.target.value })}
+                    className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--fg)]"
+                  >
+                    {autopilotProviders.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name} {p.configured ? '' : '— بدون مفتاح API'}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-[var(--fg-subtle)] mb-1.5">مهلة المراجعة (دقائق)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={autopilotSettings.review_window_minutes}
+                    onChange={(e) => setAutopilotSettings({ ...autopilotSettings, review_window_minutes: Number(e.target.value) })}
+                    onBlur={(e) => handleSaveAutopilotSettings({ review_window_minutes: Number(e.target.value) })}
+                    className="w-full bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--fg)]"
+                  />
+                </div>
+              </div>
+
+              {!autopilotProviders.find((p) => p.id === autopilotSettings.active_provider)?.configured && (
+                <p className="text-xs text-amber-500">⚠️ ما فيه مفتاح API مضبوط لهذا النموذج بـ .env.local — الاستيراد بيفشل لين تضيفه.</p>
+              )}
+            </div>
+
+            {/* RSS sources */}
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-5 mb-6">
+              <h2 className="font-bold text-[var(--fg)] mb-3">مصادر RSS</h2>
+              <div className="space-y-2 mb-4">
+                {(autopilotSettings.rss_sources ?? []).length === 0 && (
+                  <p className="text-xs text-[var(--fg-faint)]">ما فيه مصادر مضافة بعد.</p>
+                )}
+                {(autopilotSettings.rss_sources ?? []).map((s: any) => (
+                  <div key={s.url} className="flex items-center justify-between gap-2 bg-[var(--bg-base)] rounded-lg p-2.5">
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold text-[var(--fg)] truncate">{s.name}</p>
+                      <p className="text-[10px] text-[var(--fg-faint)] truncate" dir="ltr">{s.url}</p>
+                    </div>
+                    <button onClick={() => handleRemoveRssSource(s.url)} className="flex-shrink-0 p-1.5 rounded-lg text-[var(--fg-faint)] hover:bg-red-500/10 hover:text-red-500">
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input value={newRssName} onChange={(e) => setNewRssName(e.target.value)} placeholder="اسم المصدر" className="flex-1 bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--fg)]" />
+                <input value={newRssUrl} onChange={(e) => setNewRssUrl(e.target.value)} placeholder="https://example.com/feed" dir="ltr" className="flex-[2] bg-[var(--bg-surface-2)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--fg)]" />
+                <button onClick={handleAddRssSource} className="px-4 py-2 bg-primary hover:bg-emerald-600 text-white rounded-lg text-sm font-bold whitespace-nowrap">إضافة</button>
+              </div>
+            </div>
+
+            {/* Review queue */}
+            <div>
+              <h2 className="font-bold text-[var(--fg)] mb-3">طابور المراجعة ({pendingArticles.filter((p) => p.status === 'PENDING').length})</h2>
+              {pendingArticles.filter((p) => p.status === 'PENDING').length === 0 ? (
+                <div className="text-center py-12 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)] border-dashed text-[var(--fg-faint)]">
+                  ما فيه مقالات بانتظار المراجعة حاليًا.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {pendingArticles.filter((p) => p.status === 'PENDING').map((item) => {
+                    const autoPublishAt = new Date(new Date(item.created_at).getTime() + autopilotSettings.review_window_minutes * 60000);
+                    return (
+                      <div key={item.id} className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-4">
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="min-w-0">
+                            <p className="font-bold text-[var(--fg)]">{item.title}</p>
+                            <p className="text-xs text-[var(--fg-faint)] mt-1">{item.source_name} • {item.ai_provider} • ينشر تلقائيًا الساعة {autoPublishAt.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })} ما لم تتصرف</p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-[var(--fg-muted)] line-clamp-2 mb-3">{item.summary}</p>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => handleReviewAction(item.id, 'publish-now')} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20">
+                            نشر الآن
+                          </button>
+                          <button onClick={() => handleReviewAction(item.id, 'reject')} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-red-500/10 text-red-500 hover:bg-red-500/20">
+                            رفض
+                          </button>
+                          <a href={item.source_url} target="_blank" rel="noreferrer" className="px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--bg-surface-2)] text-[var(--fg-faint)] hover:text-[var(--fg)]">
+                            المصدر الأصلي
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}

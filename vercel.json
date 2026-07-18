@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/sync-finished-matches",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/autopilot-import",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/autopilot-publish",
+      "schedule": "0 5 * * *"
     }
   ]
 }
